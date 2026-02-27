@@ -20,7 +20,14 @@ export default function ProfileScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      <AppLogo size={64} />
+      <ThemedView
+        style={[
+          styles.profileImage,
+          { borderColor: palette.border, backgroundColor: palette.surface },
+        ]}
+      >
+        <AppLogo size={68} />
+      </ThemedView>
       <ThemedText type="title">Profile</ThemedText>
 
       {FORCE_REGISTERED_TEST_MODE ? (
@@ -92,6 +99,14 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
     gap: 10,
+  },
+  profileImage: {
+    width: 84,
+    height: 84,
+    borderRadius: 42,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
   },
   button: {
     borderWidth: 1,

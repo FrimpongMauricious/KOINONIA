@@ -1,5 +1,6 @@
 import { Pressable, StyleSheet, View } from "react-native";
 
+import { AppLogo } from "@/components/app-logo";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { IconSymbol } from "@/components/ui/icon-symbol";
@@ -78,9 +79,13 @@ export function PostCard({
               },
             ]}
           >
-            <ThemedText type="defaultSemiBold">
-              {(author?.displayName ?? "U").charAt(0).toUpperCase()}
-            </ThemedText>
+            {author?.id === "u1" ? (
+              <AppLogo size={24} />
+            ) : (
+              <ThemedText type="defaultSemiBold">
+                {(author?.displayName ?? "U").charAt(0).toUpperCase()}
+              </ThemedText>
+            )}
           </View>
           <View>
             <ThemedText type="defaultSemiBold">

@@ -1,6 +1,7 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { FlatList, Pressable, StyleSheet, View } from "react-native";
 
+import { AppLogo } from "@/components/app-logo";
 import { ScreenContainer } from "@/components/screen-container";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
@@ -45,9 +46,13 @@ export default function CreatorProfileScreen() {
     <ScreenContainer contentStyle={styles.container}>
       <ThemedView style={[styles.headerCard, { borderColor: palette.border }]}>
         <View style={[styles.avatar, { borderColor: palette.border }]}>
-          <ThemedText type="defaultSemiBold">
-            {creator.displayName.charAt(0).toUpperCase()}
-          </ThemedText>
+          {creator.id === "u1" ? (
+            <AppLogo size={34} />
+          ) : (
+            <ThemedText type="defaultSemiBold">
+              {creator.displayName.charAt(0).toUpperCase()}
+            </ThemedText>
+          )}
         </View>
 
         <ThemedText type="title">{creator.displayName}</ThemedText>
