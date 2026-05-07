@@ -38,3 +38,42 @@ export type LoginRequest = {
   email: string;
   password: string;
 };
+
+export type AuthorRef = {
+  id: number;
+  username: string;
+  displayName: string | null;
+  profilePictureUrl: string | null;
+};
+
+export type PostResponse = {
+  id: number;
+  content: string;
+  createdAt: string;
+  updatedAt: string;
+  author: AuthorRef;
+  likeCount: number;
+  commentCount: number;
+  repostCount: number;
+  likedByCurrentUser: boolean;
+  repostedByCurrentUser: boolean;
+  favoritedByCurrentUser: boolean;
+};
+
+export type Page<T> = {
+  content: T[];
+  pageable: { pageNumber: number; pageSize: number };
+  last: boolean;
+  totalPages: number;
+  totalElements: number;
+  first: boolean;
+  size: number;
+  number: number;
+  numberOfElements: number;
+  empty: boolean;
+};
+
+export type LikeResponse = {
+  likeCount: number;
+  likedByCurrentUser: boolean;
+};

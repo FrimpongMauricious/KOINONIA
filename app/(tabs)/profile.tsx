@@ -6,17 +6,14 @@ import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { Colors } from "@/constants/theme";
 import { useColorScheme } from "@/hooks/use-color-scheme";
-import {
-    FORCE_REGISTERED_TEST_MODE,
-    usePrototypeStore,
-} from "@/src/state/prototype-store";
+import { useAuth } from "@/src/auth/auth-context";
 import { usePrototypeSession } from "@/src/state/session";
 
 export default function ProfileScreen() {
   const colorScheme = useColorScheme() ?? "light";
   const palette = Colors[colorScheme];
   const session = usePrototypeSession();
-  const { activeUser } = usePrototypeStore();
+  const { user } = useAuth();
 
   return (
     <ThemedView style={styles.container}>
@@ -29,12 +26,6 @@ export default function ProfileScreen() {
         <AppLogo size={68} />
       </ThemedView>
       <ThemedText type="title">Profile</ThemedText>
-
-      {FORCE_REGISTERED_TEST_MODE ? (
-        <ThemedText>
-          Testing mode enabled: registered-user features are unlocked.
-        </ThemedText>
-      ) : null}
 
       {session.isGuest ? (
         <>
@@ -68,11 +59,13 @@ export default function ProfileScreen() {
         </>
       ) : (
         <>
-          <ThemedText type="subtitle">{activeUser?.displayName}</ThemedText>
-          <ThemedText>@{activeUser?.handle}</ThemedText>
+          <ThemedText type="subtitle">
+            {user?.displayName ?? user?.username}
+          </ThemedText>
+          <ThemedText>@{user?.username}</ThemedText>
           <ThemedText>
-            {activeUser?.followersCount ?? 0} followers ·{" "}
-            {activeUser?.followingCount ?? 0} following
+            {user?.followerCount ?? 0} followers ·{" "}
+            {user?.followingCount ?? 0} following
           </ThemedText>
 
           <Link href="/edit-profile" asChild>

@@ -1,43 +1,50 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { FlatList, Pressable, StyleSheet, View } from "react-native";
+import { ActivityIndicator, FlatList, StyleSheet, View } from "react-native";
+import { useQuery } from "@tanstack/react-query";
 
-import { AppLogo } from "@/components/app-logo";
 import { ScreenContainer } from "@/components/screen-container";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { Colors } from "@/constants/theme";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { PostCard } from "@/src/features/feed/components/post-card";
-import { usePrototypeStore } from "@/src/state/prototype-store";
+import { fetchUserPosts } from "@/src/api/users";
+import {
+  useToggleFavorite,
+  useToggleLike,
+  useToggleRepost,
+} from "@/src/features/feed/hooks/use-post-mutations";
 import { usePrototypeSession } from "@/src/state/session";
 
 export default function CreatorProfileScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const numericId = parseInt(id ?? "0", 10);
   const router = useRouter();
   const colorScheme = useColorScheme() ?? "light";
   const palette = Colors[colorScheme];
   const session = usePrototypeSession();
 
-  const {
-    users,
-    posts,
-    toggleFollow,
-    toggleLike,
-    addComment,
-    toggleRepost,
-    toggleFavorite,
-  } = usePrototypeStore();
+  const { data, isLoading } = useQuery({
+    queryKey: ["user-posts", numericId],
+    queryFn: () => fetchUserPosts(numericId),
+    enabled: numericId > 0,
+  });
 
-  const creator = users.find((user) => user.id === id);
-  const creatorPosts = posts.filter((post) => post.authorId === id);
-  const isFollowing = creator
-    ? session.followingIds.includes(creator.id)
-    : false;
+  const toggleLike = useToggleLike();
+  const toggleRepost = useToggleRepost();
+  const toggleFavorite = useToggleFavorite();
 
-  if (!creator) {
+  const posts = data?.content ?? [];
+  // Derive author info from the first post's nested AuthorRef
+  const author = posts[0]?.author ?? null;
+  const authorDisplayName = author
+    ? (author.displayName ?? author.username)
+    : null;
+
+  if (isLoading) {
     return (
-      <ScreenContainer contentStyle={styles.container}>
-        <ThemedText>Creator not found.</ThemedText>
+      <ScreenContainer contentStyle={styles.centered}>
+        <ActivityIndicator size="large" />
       </ScreenContainer>
     );
   }
@@ -45,39 +52,28 @@ export default function CreatorProfileScreen() {
   return (
     <ScreenContainer contentStyle={styles.container}>
       <ThemedView style={[styles.headerCard, { borderColor: palette.border }]}>
-        <View style={[styles.avatar, { borderColor: palette.border }]}>
-          {creator.id === "u1" ? (
-            <AppLogo size={34} />
-          ) : (
-            <ThemedText type="defaultSemiBold">
-              {creator.displayName.charAt(0).toUpperCase()}
+        {author ? (
+          <>
+            <View style={[styles.avatar, { borderColor: palette.border }]}>
+              <ThemedText type="defaultSemiBold">
+                {(authorDisplayName ?? "U").charAt(0).toUpperCase()}
+              </ThemedText>
+            </View>
+            <ThemedText type="title">{authorDisplayName}</ThemedText>
+            <ThemedText>@{author.username}</ThemedText>
+            <ThemedText style={styles.profileNote}>
+              Full profile coming in the next update.
             </ThemedText>
-          )}
-        </View>
-
-        <ThemedText type="title">{creator.displayName}</ThemedText>
-        <ThemedText>@{creator.handle}</ThemedText>
-        <ThemedText>
-          {creator.followersCount} followers · {creator.followingCount}{" "}
-          following
-        </ThemedText>
-
-        {creator.id !== session.activeUserId ? (
-          <Pressable
-            style={[styles.followButton, { borderColor: palette.border }]}
-            onPress={() => toggleFollow(creator.id)}
-          >
-            <ThemedText type="defaultSemiBold">
-              {isFollowing ? "Following" : "Follow"}
-            </ThemedText>
-          </Pressable>
-        ) : null}
+          </>
+        ) : (
+          <ThemedText>Creator not found.</ThemedText>
+        )}
       </ThemedView>
 
       <ThemedText type="subtitle">Posts</ThemedText>
       <FlatList
-        data={creatorPosts}
-        keyExtractor={(item) => item.id}
+        data={posts}
+        keyExtractor={(item) => item.id.toString()}
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
         renderItem={({ item }) => (
@@ -89,13 +85,15 @@ export default function CreatorProfileScreen() {
             onOpenAuthor={() =>
               router.push({
                 pathname: "/user/[id]",
-                params: { id: item.authorId },
+                params: { id: item.author.id.toString() },
               })
             }
-            onToggleLike={() => toggleLike(item.id)}
-            onAddComment={() => addComment(item.id)}
-            onToggleRepost={() => toggleRepost(item.id)}
-            onToggleFavorite={() => toggleFavorite(item.id)}
+            onToggleLike={() => toggleLike.mutate(item)}
+            onAddComment={() =>
+              console.log("TODO F1c: comments", item.id)
+            }
+            onToggleRepost={() => toggleRepost.mutate(item)}
+            onToggleFavorite={() => toggleFavorite.mutate(item)}
             onOpen={() => router.push(`/post/${item.id}`)}
           />
         )}
@@ -113,6 +111,11 @@ const styles = StyleSheet.create({
     padding: 16,
     gap: 10,
   },
+  centered: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
   headerCard: {
     borderWidth: 1,
     borderRadius: 12,
@@ -128,12 +131,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  followButton: {
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    marginTop: 6,
+  profileNote: {
+    marginTop: 4,
+    opacity: 0.6,
   },
   list: {
     gap: 10,

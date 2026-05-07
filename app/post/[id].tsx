@@ -1,50 +1,43 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useState } from "react";
-import { FlatList, Pressable, StyleSheet, TextInput } from "react-native";
+import { ActivityIndicator, StyleSheet } from "react-native";
+import { useQuery } from "@tanstack/react-query";
 
 import { ScreenContainer } from "@/components/screen-container";
 import { ThemedText } from "@/components/themed-text";
-import { ThemedView } from "@/components/themed-view";
-import { Colors } from "@/constants/theme";
-import { useColorScheme } from "@/hooks/use-color-scheme";
 import { PostCard } from "@/src/features/feed/components/post-card";
-import { mockUsers } from "@/src/mocks/users";
-import { usePrototypeStore } from "@/src/state/prototype-store";
+import { fetchPostById } from "@/src/api/posts";
+import {
+  useToggleFavorite,
+  useToggleLike,
+  useToggleRepost,
+} from "@/src/features/feed/hooks/use-post-mutations";
 import { usePrototypeSession } from "@/src/state/session";
 
 export default function PostDetailScreen() {
   const router = useRouter();
-  const [commentDraft, setCommentDraft] = useState("");
-  const colorScheme = useColorScheme() ?? "light";
-  const palette = Colors[colorScheme];
   const { id } = useLocalSearchParams<{ id: string }>();
+  const numericId = parseInt(id ?? "0", 10);
   const session = usePrototypeSession();
-  const {
-    posts,
-    commentsByPost,
-    addComment,
-    toggleFavorite,
-    toggleLike,
-    toggleRepost,
-  } = usePrototypeStore();
-  const post = posts.find((item) => item.id === id);
-  const comments = post ? (commentsByPost[post.id] ?? []) : [];
 
-  const handleSubmitComment = () => {
-    if (!post) {
-      return;
-    }
+  const { data: post, isLoading, isError } = useQuery({
+    queryKey: ["post", numericId],
+    queryFn: () => fetchPostById(numericId),
+    enabled: numericId > 0,
+  });
 
-    const trimmed = commentDraft.trim();
-    if (!trimmed) {
-      return;
-    }
+  const toggleLike = useToggleLike();
+  const toggleRepost = useToggleRepost();
+  const toggleFavorite = useToggleFavorite();
 
-    addComment(post.id, trimmed);
-    setCommentDraft("");
-  };
+  if (isLoading) {
+    return (
+      <ScreenContainer contentStyle={styles.centered} keyboardAvoiding>
+        <ActivityIndicator size="large" />
+      </ScreenContainer>
+    );
+  }
 
-  if (!post) {
+  if (isError || !post) {
     return (
       <ScreenContainer contentStyle={styles.container} keyboardAvoiding>
         <ThemedText>Post not found.</ThemedText>
@@ -60,67 +53,21 @@ export default function PostDetailScreen() {
         canFavorite={!session.isGuest}
         canRepost={!session.isGuest}
         onOpenAuthor={() =>
-          router.push({ pathname: "/user/[id]", params: { id: post.authorId } })
+          router.push({
+            pathname: "/user/[id]",
+            params: { id: post.author.id.toString() },
+          })
         }
-        onToggleLike={() => toggleLike(post.id)}
-        onAddComment={() => addComment(post.id)}
-        onToggleRepost={() => toggleRepost(post.id)}
-        onToggleFavorite={() => toggleFavorite(post.id)}
+        onToggleLike={() => toggleLike.mutate(post)}
+        onAddComment={() => console.log("TODO F1c: comments", post.id)}
+        onToggleRepost={() => toggleRepost.mutate(post)}
+        onToggleFavorite={() => toggleFavorite.mutate(post)}
       />
-      <ThemedText>
-        This detail screen is currently powered by local mock data and will be
-        wired to backend APIs later.
+
+      <ThemedText type="subtitle">Comments</ThemedText>
+      <ThemedText style={styles.placeholder}>
+        Comments coming in the next update.
       </ThemedText>
-
-      <ThemedView style={styles.commentComposerContainer}>
-        <TextInput
-          value={commentDraft}
-          onChangeText={setCommentDraft}
-          placeholder="Write your comment"
-          placeholderTextColor={palette.tabIconDefault}
-          style={[
-            styles.commentInput,
-            {
-              borderColor: palette.border,
-              backgroundColor: palette.surface,
-              color: palette.text,
-            },
-          ]}
-        />
-        <Pressable
-          onPress={handleSubmitComment}
-          style={[
-            styles.commentButton,
-            { borderColor: palette.border, backgroundColor: palette.surface },
-          ]}
-        >
-          <ThemedText type="defaultSemiBold">Add Comment</ThemedText>
-        </Pressable>
-      </ThemedView>
-
-      <ThemedText type="subtitle">Comments ({comments.length})</ThemedText>
-      {comments.length === 0 ? (
-        <ThemedText>No comments yet. Write one above.</ThemedText>
-      ) : (
-        <FlatList
-          data={comments}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.commentsList}
-          showsVerticalScrollIndicator={false}
-          renderItem={({ item }) => {
-            const author = mockUsers.find((user) => user.id === item.authorId);
-
-            return (
-              <ThemedView style={styles.commentCard}>
-                <ThemedText type="defaultSemiBold">
-                  {author?.displayName ?? "User"}
-                </ThemedText>
-                <ThemedText>{item.content}</ThemedText>
-              </ThemedView>
-            );
-          }}
-        />
-      )}
     </ScreenContainer>
   );
 }
@@ -131,29 +78,12 @@ const styles = StyleSheet.create({
     padding: 16,
     gap: 10,
   },
-  commentsList: {
-    gap: 8,
-    paddingBottom: 24,
-  },
-  commentComposerContainer: {
-    gap: 8,
-  },
-  commentInput: {
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-  },
-  commentButton: {
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingVertical: 10,
+  centered: {
+    flex: 1,
+    justifyContent: "center",
     alignItems: "center",
   },
-  commentCard: {
-    borderWidth: 1,
-    borderRadius: 8,
-    padding: 10,
-    gap: 4,
+  placeholder: {
+    marginTop: 8,
   },
 });

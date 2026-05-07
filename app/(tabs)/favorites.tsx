@@ -1,20 +1,34 @@
 import { useRouter } from "expo-router";
-import { FlatList, StyleSheet } from "react-native";
+import { ActivityIndicator, FlatList, StyleSheet } from "react-native";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { PostCard } from "@/src/features/feed/components/post-card";
-import { usePrototypeStore } from "@/src/state/prototype-store";
+import {
+  useToggleFavorite,
+  useToggleLike,
+  useToggleRepost,
+} from "@/src/features/feed/hooks/use-post-mutations";
+import { useFavorites } from "@/src/features/favorites/hooks/use-favorites";
 import { usePrototypeSession } from "@/src/state/session";
 
 export default function FavoritesScreen() {
   const router = useRouter();
   const session = usePrototypeSession();
-  const { posts, addComment, toggleFavorite, toggleLike, toggleRepost } =
-    usePrototypeStore();
-  const favorites = posts.filter((post) =>
-    post.favoriteBy.includes(session.activeUserId ?? ""),
-  );
+
+  const {
+    posts,
+    isLoading,
+    isRefetching,
+    refetch,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+  } = useFavorites();
+
+  const toggleLike = useToggleLike();
+  const toggleRepost = useToggleRepost();
+  const toggleFavorite = useToggleFavorite();
 
   return (
     <ThemedView style={styles.container}>
@@ -24,12 +38,30 @@ export default function FavoritesScreen() {
         <ThemedText>
           Favorites are available for registered users only.
         </ThemedText>
+      ) : isLoading ? (
+        <ActivityIndicator style={styles.loader} size="large" />
       ) : (
         <FlatList
-          data={favorites}
-          keyExtractor={(item) => item.id}
+          data={posts}
+          keyExtractor={(item) => item.id.toString()}
           contentContainerStyle={styles.list}
           showsVerticalScrollIndicator={false}
+          refreshing={isRefetching}
+          onRefresh={refetch}
+          onEndReached={() => {
+            if (hasNextPage) fetchNextPage();
+          }}
+          onEndReachedThreshold={0.5}
+          ListEmptyComponent={
+            <ThemedText style={styles.emptyText}>
+              No favorites yet — tap the bookmark on any post.
+            </ThemedText>
+          }
+          ListFooterComponent={
+            isFetchingNextPage ? (
+              <ActivityIndicator style={styles.footerSpinner} />
+            ) : null
+          }
           renderItem={({ item }) => (
             <PostCard
               post={item}
@@ -39,13 +71,16 @@ export default function FavoritesScreen() {
               onOpenAuthor={() =>
                 router.push({
                   pathname: "/user/[id]",
-                  params: { id: item.authorId },
+                  params: { id: item.author.id.toString() },
                 })
               }
-              onToggleLike={() => toggleLike(item.id)}
-              onAddComment={() => addComment(item.id)}
-              onToggleRepost={() => toggleRepost(item.id)}
-              onToggleFavorite={() => toggleFavorite(item.id)}
+              onToggleLike={() => toggleLike.mutate(item)}
+              onAddComment={() =>
+                console.log("TODO F1c: comments", item.id)
+              }
+              onToggleRepost={() => toggleRepost.mutate(item)}
+              onToggleFavorite={() => toggleFavorite.mutate(item)}
+              onOpen={() => router.push(`/post/${item.id}`)}
             />
           )}
         />
@@ -63,5 +98,15 @@ const styles = StyleSheet.create({
   list: {
     gap: 10,
     paddingBottom: 20,
+  },
+  loader: {
+    flex: 1,
+  },
+  emptyText: {
+    textAlign: "center",
+    marginTop: 40,
+  },
+  footerSpinner: {
+    paddingVertical: 16,
   },
 });

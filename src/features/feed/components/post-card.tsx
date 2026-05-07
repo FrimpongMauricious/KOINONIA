@@ -1,17 +1,15 @@
 import { Pressable, StyleSheet, View } from "react-native";
 
-import { AppLogo } from "@/components/app-logo";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { Colors } from "@/constants/theme";
 import { useColorScheme } from "@/hooks/use-color-scheme";
-import { usePrototypeStore } from "@/src/state/prototype-store";
 import { usePrototypeSession } from "@/src/state/session";
-import { Post } from "@/src/types/domain";
+import { PostResponse } from "@/src/api/types";
 
 interface PostCardProps {
-  post: Post;
+  post: PostResponse;
   canRepost: boolean;
   canFavorite: boolean;
   canLike?: boolean;
@@ -38,12 +36,9 @@ export function PostCard({
   const colorScheme = useColorScheme() ?? "light";
   const palette = Colors[colorScheme];
   const session = usePrototypeSession();
-  const { users, toggleFollow } = usePrototypeStore();
-  const author = users.find((user) => user.id === post.authorId);
-  const activeUserId = session.activeUserId ?? "";
 
-  const isLiked = post.likedBy.includes(activeUserId);
-  const isReshared = post.repostedBy.includes(activeUserId);
+  const isLiked = post.likedByCurrentUser;
+  const isReshared = post.repostedByCurrentUser;
 
   const likeActiveColor = "#D10000";
   const reshareDefaultColor = "#B0E0E6";
@@ -52,10 +47,14 @@ export function PostCard({
   const likeColor = isLiked ? likeActiveColor : palette.icon;
   const reshareColor = isReshared ? reshareActiveColor : reshareDefaultColor;
 
-  const canFollowAuthor = Boolean(author && author.id !== activeUserId);
-  const isFollowingAuthor = author
-    ? session.followingIds.includes(author.id)
-    : false;
+  const authorDisplayName =
+    post.author.displayName ?? post.author.username;
+  const authorInitial = authorDisplayName.charAt(0).toUpperCase();
+  const canFollowAuthor =
+    post.author.id.toString() !== session.activeUserId;
+
+  // Follow wired in F1c
+  const handleFollow = () => console.log("TODO F1c: follow", post.author.id);
 
   return (
     <ThemedView
@@ -79,30 +78,20 @@ export function PostCard({
               },
             ]}
           >
-            {author?.id === "u1" ? (
-              <AppLogo size={24} />
-            ) : (
-              <ThemedText type="defaultSemiBold">
-                {(author?.displayName ?? "U").charAt(0).toUpperCase()}
-              </ThemedText>
-            )}
+            <ThemedText type="defaultSemiBold">{authorInitial}</ThemedText>
           </View>
           <View>
-            <ThemedText type="defaultSemiBold">
-              {author?.displayName ?? "Unknown author"}
-            </ThemedText>
-            <ThemedText>@{author?.handle ?? "unknown"}</ThemedText>
+            <ThemedText type="defaultSemiBold">{authorDisplayName}</ThemedText>
+            <ThemedText>@{post.author.username}</ThemedText>
           </View>
         </Pressable>
 
         {canFollowAuthor ? (
           <Pressable
             style={[styles.followButton, { borderColor: palette.border }]}
-            onPress={() => author && toggleFollow(author.id)}
+            onPress={handleFollow}
           >
-            <ThemedText type="defaultSemiBold">
-              {isFollowingAuthor ? "Following" : "Follow"}
-            </ThemedText>
+            <ThemedText type="defaultSemiBold">Follow</ThemedText>
           </Pressable>
         ) : null}
       </View>
@@ -112,11 +101,11 @@ export function PostCard({
       <View style={styles.metricsRow}>
         <View style={styles.metricItem}>
           <IconSymbol size={16} name="heart.fill" color={likeColor} />
-          <ThemedText>{post.likesCount}</ThemedText>
+          <ThemedText>{post.likeCount}</ThemedText>
         </View>
         <View style={styles.metricItem}>
           <IconSymbol size={16} name="bubble.left.fill" color={palette.icon} />
-          <ThemedText>{post.commentsCount}</ThemedText>
+          <ThemedText>{post.commentCount}</ThemedText>
         </View>
         <View style={styles.metricItem}>
           <IconSymbol
@@ -124,7 +113,7 @@ export function PostCard({
             name="arrow.2.squarepath"
             color={reshareColor}
           />
-          <ThemedText>{post.repostsCount}</ThemedText>
+          <ThemedText>{post.repostCount}</ThemedText>
         </View>
       </View>
 
@@ -152,7 +141,7 @@ export function PostCard({
               name="bubble.left.fill"
               color={palette.icon}
             />
-            <ThemedText>Comment +1</ThemedText>
+            <ThemedText>Comment</ThemedText>
           </View>
         </Pressable>
 
