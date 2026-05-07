@@ -4,6 +4,7 @@ import { ActivityIndicator, FlatList, StyleSheet } from "react-native";
 import { AppLogo } from "@/components/app-logo";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
+import { useAuth } from "@/src/auth/auth-context";
 import { PostCard } from "@/src/features/feed/components/post-card";
 import { useFeed } from "@/src/features/feed/hooks/use-feed";
 import {
@@ -11,11 +12,11 @@ import {
   useToggleLike,
   useToggleRepost,
 } from "@/src/features/feed/hooks/use-post-mutations";
-import { usePrototypeSession } from "@/src/state/session";
 
 export default function HomeScreen() {
   const router = useRouter();
-  const session = usePrototypeSession();
+  const { status } = useAuth();
+  const isGuest = status !== "authenticated";
 
   const {
     posts,
@@ -37,7 +38,7 @@ export default function HomeScreen() {
         <AppLogo size={56} />
         <ThemedText type="title">Koinonia</ThemedText>
         <ThemedText>
-          {session.isGuest ? "Guest Mode" : "Registered User"}
+          {isGuest ? "Guest Mode" : "Registered User"}
         </ThemedText>
       </ThemedView>
 
@@ -68,9 +69,9 @@ export default function HomeScreen() {
           renderItem={({ item }) => (
             <PostCard
               post={item}
-              canLike={!session.isGuest}
-              canRepost={!session.isGuest}
-              canFavorite={!session.isGuest}
+              canLike={!isGuest}
+              canRepost={!isGuest}
+              canFavorite={!isGuest}
               onOpenAuthor={() =>
                 router.push({
                   pathname: "/user/[id]",
@@ -78,9 +79,7 @@ export default function HomeScreen() {
                 })
               }
               onToggleLike={() => toggleLike.mutate(item)}
-              onAddComment={() =>
-                console.log("TODO F1c: comments", item.id)
-              }
+              onAddComment={() => router.push(`/post/${item.id}`)}
               onToggleRepost={() => toggleRepost.mutate(item)}
               onToggleFavorite={() => toggleFavorite.mutate(item)}
               onOpen={() => router.push(`/post/${item.id}`)}

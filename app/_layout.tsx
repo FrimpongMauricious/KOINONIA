@@ -9,7 +9,6 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { AuthProvider, useAuth } from "@/src/auth/auth-context";
-import { PrototypeStoreProvider } from "@/src/state/prototype-store";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -48,8 +47,7 @@ function RootLayoutInner() {
   }
 
   return (
-    <PrototypeStoreProvider>
-      <Stack>
+    <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
         <Stack.Screen name="post/[id]" options={{ title: "Post" }} />
@@ -63,7 +61,6 @@ function RootLayoutInner() {
           options={{ presentation: "modal", title: "Info" }}
         />
       </Stack>
-    </PrototypeStoreProvider>
   );
 }
 

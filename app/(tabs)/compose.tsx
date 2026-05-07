@@ -7,8 +7,8 @@ import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { Colors } from "@/constants/theme";
 import { useColorScheme } from "@/hooks/use-color-scheme";
+import { useAuth } from "@/src/auth/auth-context";
 import { useCreatePost } from "@/src/features/feed/hooks/use-post-mutations";
-import { usePrototypeSession } from "@/src/state/session";
 
 const MAX_POST_LENGTH = 1000;
 
@@ -18,7 +18,8 @@ export default function ComposeScreen() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const colorScheme = useColorScheme() ?? "light";
   const palette = Colors[colorScheme];
-  const session = usePrototypeSession();
+  const { status } = useAuth();
+  const isGuest = status !== "authenticated";
   const createPost = useCreatePost();
 
   const charactersLeft = useMemo(
@@ -44,7 +45,7 @@ export default function ComposeScreen() {
       <ThemedView style={styles.inner}>
         <ThemedText type="title">Create Post</ThemedText>
 
-        {session.isGuest ? (
+        {isGuest ? (
           <ThemedText>
             Guest users cannot create posts. Sign in to continue.
           </ThemedText>

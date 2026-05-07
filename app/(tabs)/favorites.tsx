@@ -9,12 +9,13 @@ import {
   useToggleLike,
   useToggleRepost,
 } from "@/src/features/feed/hooks/use-post-mutations";
+import { useAuth } from "@/src/auth/auth-context";
 import { useFavorites } from "@/src/features/favorites/hooks/use-favorites";
-import { usePrototypeSession } from "@/src/state/session";
 
 export default function FavoritesScreen() {
   const router = useRouter();
-  const session = usePrototypeSession();
+  const { status } = useAuth();
+  const isGuest = status !== "authenticated";
 
   const {
     posts,
@@ -34,7 +35,7 @@ export default function FavoritesScreen() {
     <ThemedView style={styles.container}>
       <ThemedText type="title">Favorites</ThemedText>
 
-      {session.isGuest ? (
+      {isGuest ? (
         <ThemedText>
           Favorites are available for registered users only.
         </ThemedText>
@@ -65,9 +66,9 @@ export default function FavoritesScreen() {
           renderItem={({ item }) => (
             <PostCard
               post={item}
-              canLike={!session.isGuest}
-              canFavorite={!session.isGuest}
-              canRepost={!session.isGuest}
+              canLike={!isGuest}
+              canFavorite={!isGuest}
+              canRepost={!isGuest}
               onOpenAuthor={() =>
                 router.push({
                   pathname: "/user/[id]",
@@ -75,9 +76,7 @@ export default function FavoritesScreen() {
                 })
               }
               onToggleLike={() => toggleLike.mutate(item)}
-              onAddComment={() =>
-                console.log("TODO F1c: comments", item.id)
-              }
+              onAddComment={() => router.push(`/post/${item.id}`)}
               onToggleRepost={() => toggleRepost.mutate(item)}
               onToggleFavorite={() => toggleFavorite.mutate(item)}
               onOpen={() => router.push(`/post/${item.id}`)}

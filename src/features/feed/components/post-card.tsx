@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 
 import { ThemedText } from "@/components/themed-text";
@@ -5,8 +6,13 @@ import { ThemedView } from "@/components/themed-view";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { Colors } from "@/constants/theme";
 import { useColorScheme } from "@/hooks/use-color-scheme";
-import { usePrototypeSession } from "@/src/state/session";
+import { useAuth } from "@/src/auth/auth-context";
 import { PostResponse } from "@/src/api/types";
+import { useToggleFollow } from "@/src/features/follows/hooks/use-follow-mutations";
+
+// TODO F1d: feed posts don't include followedByCurrentUser on the author DTO.
+// The Follow button's state is local-only and resets on feed reload.
+// Fix: add followedByCurrentUser to the backend's AuthorRef in F1d.
 
 interface PostCardProps {
   post: PostResponse;
@@ -35,7 +41,7 @@ export function PostCard({
 }: PostCardProps) {
   const colorScheme = useColorScheme() ?? "light";
   const palette = Colors[colorScheme];
-  const session = usePrototypeSession();
+  const { user } = useAuth();
 
   const isLiked = post.likedByCurrentUser;
   const isReshared = post.repostedByCurrentUser;
@@ -47,14 +53,19 @@ export function PostCard({
   const likeColor = isLiked ? likeActiveColor : palette.icon;
   const reshareColor = isReshared ? reshareActiveColor : reshareDefaultColor;
 
-  const authorDisplayName =
-    post.author.displayName ?? post.author.username;
+  const authorDisplayName = post.author.displayName ?? post.author.username;
   const authorInitial = authorDisplayName.charAt(0).toUpperCase();
-  const canFollowAuthor =
-    post.author.id.toString() !== session.activeUserId;
+  const isOwnPost = user?.id === post.author.id;
 
-  // Follow wired in F1c
-  const handleFollow = () => console.log("TODO F1c: follow", post.author.id);
+  const [following, setFollowing] = useState(false);
+  const toggleFollow = useToggleFollow();
+
+  const handleFollow = () => {
+    toggleFollow.mutate(
+      { userId: post.author.id, currentlyFollowing: following },
+      { onSuccess: () => setFollowing((f) => !f) },
+    );
+  };
 
   return (
     <ThemedView
@@ -86,12 +97,15 @@ export function PostCard({
           </View>
         </Pressable>
 
-        {canFollowAuthor ? (
+        {!isOwnPost && user ? (
           <Pressable
             style={[styles.followButton, { borderColor: palette.border }]}
             onPress={handleFollow}
+            disabled={toggleFollow.isPending}
           >
-            <ThemedText type="defaultSemiBold">Follow</ThemedText>
+            <ThemedText type="defaultSemiBold">
+              {following ? "Following" : "Follow"}
+            </ThemedText>
           </Pressable>
         ) : null}
       </View>

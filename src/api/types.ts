@@ -77,3 +77,36 @@ export type LikeResponse = {
   likeCount: number;
   likedByCurrentUser: boolean;
 };
+
+export type PublicUserProfileResponse = {
+  id: number;
+  username: string;
+  displayName: string | null;
+  bio: string | null;
+  profilePictureUrl: string | null;
+  createdAt: string;
+  followerCount: number;
+  followingCount: number;
+  followedByCurrentUser: boolean;
+};
+
+export type CommentResponse = {
+  id: number;
+  content: string;
+  createdAt: string;
+  updatedAt: string;
+  author: AuthorRef;
+};
+
+export type FollowResponse = {
+  userId: number;
+  followerCount: number;
+  followingCount: number;
+  followedByCurrentUser: boolean;
+};
+
+export type UpdateProfileRequest = {
+  displayName?: string;
+  bio?: string;
+  profilePictureUrl?: string;
+};
