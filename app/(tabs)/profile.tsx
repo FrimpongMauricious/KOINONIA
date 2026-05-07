@@ -1,15 +1,34 @@
-import { Link } from "expo-router";
+import { Link, useRouter } from "expo-router";
 import { useState } from "react";
-import { Modal, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import {
+  ActivityIndicator,
+  FlatList,
+  Modal,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
+import { useInfiniteQuery } from "@tanstack/react-query";
 
 import { AppLogo } from "@/components/app-logo";
-import { ThemedText } from "@/components/themed-text";
-import { ThemedView } from "@/components/themed-view";
 import { IconSymbol } from "@/components/ui/icon-symbol";
+import { ThemedView } from "@/components/themed-view";
+import { PostCard } from "@/src/features/feed/components/post-card";
 import { useAuth } from "@/src/auth/auth-context";
-import { deleteMyAccount } from "@/src/api/users";
+import { deleteMyAccount, fetchUserPosts } from "@/src/api/users";
+import {
+  useToggleFavorite,
+  useToggleLike,
+  useToggleRepost,
+} from "@/src/features/feed/hooks/use-post-mutations";
+
+const BANNER_HEIGHT = 130;
+const AVATAR_SIZE = 76;
 
 export default function ProfileScreen() {
+  const router = useRouter();
   const { user, status, logout } = useAuth();
   const isGuest = status !== "authenticated";
 
@@ -19,6 +38,21 @@ export default function ProfileScreen() {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
+  const postsQuery = useInfiniteQuery({
+    queryKey: ["user-posts", user?.id ?? 0],
+    queryFn: ({ pageParam }: { pageParam: number }) =>
+      fetchUserPosts(user!.id, pageParam),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) =>
+      lastPage.last ? undefined : lastPage.number + 1,
+    enabled: !!user?.id,
+  });
+
+  const posts = postsQuery.data?.pages.flatMap((p) => p.content) ?? [];
+  const toggleLike = useToggleLike();
+  const toggleRepost = useToggleRepost();
+  const toggleFavorite = useToggleFavorite();
+
   const handleDeleteAccount = async () => {
     setDeleteLoading(true);
     setDeleteError(null);
@@ -26,26 +60,19 @@ export default function ProfileScreen() {
       await deleteMyAccount(deletePassword);
       await logout();
     } catch (err) {
-      setDeleteError(
-        err instanceof Error ? err.message : "Something went wrong",
-      );
+      setDeleteError(err instanceof Error ? err.message : "Something went wrong");
       setDeleteLoading(false);
     }
   };
 
-  const displayName = user?.displayName ?? user?.username;
-  const initial = displayName?.charAt(0).toUpperCase() ?? "?";
-
-  return (
-    <ThemedView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Profile</Text>
-      </View>
-
-      {isGuest ? (
-        <View style={styles.guestSection}>
+  if (isGuest) {
+    return (
+      <ThemedView style={styles.root}>
+        <View style={styles.guestBanner} />
+        <View style={styles.guestBody}>
           <AppLogo size={72} />
-          <ThemedText style={styles.guestText}>You are browsing as a guest.</ThemedText>
+          <Text style={styles.guestTitle}>Join Koinonia</Text>
+          <Text style={styles.guestSub}>Sign in to share insights and connect with the community.</Text>
           <Link href="/(auth)/login" asChild>
             <Pressable style={styles.primaryBtn}>
               <Text style={styles.primaryBtnText}>Log in</Text>
@@ -57,38 +84,110 @@ export default function ProfileScreen() {
             </Pressable>
           </Link>
         </View>
-      ) : (
-        <>
-          <View style={styles.profileSection}>
-            <View style={styles.avatarCircle}>
-              <Text style={styles.avatarText}>{initial}</Text>
-            </View>
-            <Text style={styles.displayName}>{displayName}</Text>
-            <Text style={styles.username}>@{user?.username}</Text>
-            {user?.bio ? <Text style={styles.bio}>{user.bio}</Text> : null}
-            <Text style={styles.stats}>
-              {user?.followerCount ?? 0} followers · {user?.followingCount ?? 0} following
-            </Text>
-          </View>
+      </ThemedView>
+    );
+  }
 
-          <View style={styles.actions}>
-            <Link href="/edit-profile" asChild>
-              <Pressable style={styles.outlineBtn}>
-                <Text style={styles.outlineBtnText}>Edit profile</Text>
-              </Pressable>
-            </Link>
+  const displayName = user?.displayName ?? user?.username ?? "";
+  const initial = displayName.charAt(0).toUpperCase();
 
-            <Pressable style={styles.logoutBtn} onPress={logout}>
-              <Text style={styles.logoutBtnText}>Log out</Text>
-            </Pressable>
+  const profileHeader = (
+    <View>
+      {/* Blue banner */}
+      <View style={styles.banner} />
 
-            <Pressable onPress={() => setDeleteModalVisible(true)}>
-              <Text style={styles.deleteLink}>Delete account</Text>
-            </Pressable>
-          </View>
-        </>
-      )}
+      {/* Avatar row — overlaps banner */}
+      <View style={styles.avatarRow}>
+        <View style={styles.avatar}>
+          <Text style={styles.avatarInitial}>{initial}</Text>
+        </View>
+        <Link href="/edit-profile" asChild>
+          <Pressable style={styles.editBtn}>
+            <Text style={styles.editBtnText}>Edit profile</Text>
+          </Pressable>
+        </Link>
+      </View>
 
+      {/* Profile info */}
+      <View style={styles.profileInfo}>
+        <Text style={styles.displayName}>{displayName}</Text>
+        <Text style={styles.username}>@{user?.username}</Text>
+        {user?.bio ? <Text style={styles.bio}>{user.bio}</Text> : null}
+
+        {/* Stats row: bold numbers + muted labels */}
+        <View style={styles.statsRow}>
+          <Pressable style={styles.statItem}>
+            <Text style={styles.statNumber}>{user?.followingCount ?? 0}</Text>
+            <Text style={styles.statLabel}> Following</Text>
+          </Pressable>
+          <Pressable style={[styles.statItem, { marginLeft: 18 }]}>
+            <Text style={styles.statNumber}>{user?.followerCount ?? 0}</Text>
+            <Text style={styles.statLabel}> Followers</Text>
+          </Pressable>
+        </View>
+
+        {/* Secondary account actions */}
+        <View style={styles.accountActions}>
+          <Pressable onPress={logout}>
+            <Text style={styles.secondaryLink}>Log out</Text>
+          </Pressable>
+          <Text style={styles.dot}>·</Text>
+          <Pressable onPress={() => setDeleteModalVisible(true)}>
+            <Text style={[styles.secondaryLink, { color: "#71767B" }]}>Delete account</Text>
+          </Pressable>
+        </View>
+      </View>
+
+      {/* Posts tab indicator */}
+      <View style={styles.tabBar}>
+        <View style={styles.activeTab}>
+          <Text style={styles.activeTabText}>Posts</Text>
+        </View>
+      </View>
+    </View>
+  );
+
+  return (
+    <ThemedView style={styles.root}>
+      <FlatList
+        data={posts}
+        keyExtractor={(item) => item.id.toString()}
+        ListHeaderComponent={() => profileHeader}
+        contentContainerStyle={{ paddingBottom: 24 }}
+        showsVerticalScrollIndicator={false}
+        onEndReached={() => {
+          if (postsQuery.hasNextPage) postsQuery.fetchNextPage();
+        }}
+        onEndReachedThreshold={0.5}
+        ListEmptyComponent={
+          postsQuery.isLoading ? (
+            <ActivityIndicator style={styles.centerSpinner} color="#1D9BF0" />
+          ) : (
+            <Text style={styles.emptyText}>No posts yet — share your first insight.</Text>
+          )
+        }
+        ListFooterComponent={
+          postsQuery.isFetchingNextPage ? (
+            <ActivityIndicator style={{ paddingVertical: 16 }} color="#1D9BF0" />
+          ) : null
+        }
+        renderItem={({ item }) => (
+          <PostCard
+            post={item}
+            canLike
+            canRepost
+            canFavorite
+            onOpenAuthor={() => {}}
+            onToggleLike={() => toggleLike.mutate(item)}
+            onAddComment={() => router.push(`/post/${item.id}`)}
+            onToggleRepost={() => toggleRepost.mutate(item)}
+            onToggleFavorite={() => toggleFavorite.mutate(item)}
+            onOpen={() => router.push(`/post/${item.id}`)}
+          />
+        )}
+      />
+
+      {/* Delete account modal */}
       <Modal
         visible={deleteModalVisible}
         transparent
@@ -104,7 +203,7 @@ export default function ProfileScreen() {
 
             <View style={styles.modalInputWrapper}>
               <TextInput
-                style={styles.modalInputWithIcon}
+                style={styles.modalInput}
                 placeholder="Password"
                 placeholderTextColor="#71767B"
                 secureTextEntry={!showDeletePassword}
@@ -142,7 +241,11 @@ export default function ProfileScreen() {
               </Pressable>
 
               <Pressable
-                style={[styles.deleteConfirmBtn, { flex: 1 }, (!deletePassword || deleteLoading) && styles.btnDisabled]}
+                style={[
+                  styles.deleteConfirmBtn,
+                  { flex: 1 },
+                  (!deletePassword || deleteLoading) && styles.btnDisabled,
+                ]}
                 onPress={handleDeleteAccount}
                 disabled={!deletePassword || deleteLoading}
               >
@@ -159,51 +262,84 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
+  root: {
     flex: 1,
   },
-  header: {
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#2F3336",
+
+  /* ── Guest view ── */
+  guestBanner: {
+    height: 80,
+    backgroundColor: "#16181C",
   },
-  headerTitle: {
-    color: "#E7E9EA",
-    fontSize: 20,
-    fontWeight: "800",
-  },
-  guestSection: {
+  guestBody: {
     padding: 24,
     alignItems: "center",
-    gap: 16,
+    gap: 14,
   },
-  guestText: {
+  guestTitle: {
+    color: "#E7E9EA",
+    fontSize: 24,
+    fontWeight: "800",
     textAlign: "center",
   },
-  profileSection: {
-    padding: 20,
-    gap: 6,
+  guestSub: {
+    color: "#71767B",
+    fontSize: 15,
+    textAlign: "center",
+    lineHeight: 22,
+    marginBottom: 4,
   },
-  avatarCircle: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
+
+  /* ── Banner & avatar ── */
+  banner: {
+    height: BANNER_HEIGHT,
     backgroundColor: "#1D9BF0",
+  },
+  avatarRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-end",
+    paddingHorizontal: 16,
+    marginTop: -(AVATAR_SIZE / 2),
+    marginBottom: 12,
+  },
+  avatar: {
+    width: AVATAR_SIZE,
+    height: AVATAR_SIZE,
+    borderRadius: AVATAR_SIZE / 2,
+    backgroundColor: "#1D9BF0",
+    borderWidth: 4,
+    borderColor: "#000000",
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 8,
   },
-  avatarText: {
+  avatarInitial: {
     color: "#FFFFFF",
-    fontSize: 28,
+    fontSize: 30,
     fontWeight: "700",
+  },
+  editBtn: {
+    borderWidth: 1,
+    borderColor: "#536471",
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  editBtnText: {
+    color: "#E7E9EA",
+    fontWeight: "700",
+    fontSize: 14,
+  },
+
+  /* ── Profile info ── */
+  profileInfo: {
+    paddingHorizontal: 16,
+    gap: 4,
   },
   displayName: {
     color: "#E7E9EA",
     fontSize: 20,
-    fontWeight: "700",
+    fontWeight: "800",
   },
   username: {
     color: "#71767B",
@@ -213,18 +349,77 @@ const styles = StyleSheet.create({
     color: "#E7E9EA",
     fontSize: 15,
     lineHeight: 22,
-    marginTop: 4,
-  },
-  stats: {
-    color: "#71767B",
-    fontSize: 14,
     marginTop: 6,
   },
-  actions: {
-    paddingHorizontal: 20,
-    gap: 12,
+  statsRow: {
+    flexDirection: "row",
+    marginTop: 12,
   },
+  statItem: {
+    flexDirection: "row",
+    alignItems: "baseline",
+  },
+  statNumber: {
+    color: "#E7E9EA",
+    fontWeight: "700",
+    fontSize: 15,
+  },
+  statLabel: {
+    color: "#71767B",
+    fontSize: 15,
+  },
+
+  /* ── Secondary actions (logout / delete) ── */
+  accountActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginTop: 12,
+  },
+  secondaryLink: {
+    color: "#F4212E",
+    fontSize: 13,
+  },
+  dot: {
+    color: "#71767B",
+    fontSize: 13,
+  },
+
+  /* ── Posts tab bar ── */
+  tabBar: {
+    flexDirection: "row",
+    marginTop: 14,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: "#2F3336",
+  },
+  activeTab: {
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderBottomWidth: 2,
+    borderBottomColor: "#1D9BF0",
+    marginBottom: -StyleSheet.hairlineWidth,
+  },
+  activeTabText: {
+    color: "#E7E9EA",
+    fontWeight: "700",
+    fontSize: 15,
+  },
+
+  /* ── Feed states ── */
+  centerSpinner: {
+    marginTop: 32,
+  },
+  emptyText: {
+    color: "#71767B",
+    fontSize: 15,
+    textAlign: "center",
+    paddingHorizontal: 32,
+    paddingTop: 32,
+  },
+
+  /* ── Shared buttons ── */
   primaryBtn: {
+    width: "100%",
     backgroundColor: "#1D9BF0",
     borderRadius: 24,
     paddingVertical: 12,
@@ -247,24 +442,8 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     fontSize: 15,
   },
-  logoutBtn: {
-    borderWidth: 1,
-    borderColor: "#F4212E",
-    borderRadius: 24,
-    paddingVertical: 10,
-    alignItems: "center",
-  },
-  logoutBtnText: {
-    color: "#F4212E",
-    fontWeight: "600",
-    fontSize: 15,
-  },
-  deleteLink: {
-    color: "#71767B",
-    fontSize: 13,
-    textAlign: "center",
-    marginTop: 4,
-  },
+
+  /* ── Delete modal ── */
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.7)",
@@ -289,16 +468,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
   },
-  modalInput: {
-    backgroundColor: "#000000",
-    borderWidth: 1,
-    borderColor: "#2F3336",
-    borderRadius: 8,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    color: "#E7E9EA",
-    fontSize: 15,
-  },
   modalInputWrapper: {
     flexDirection: "row",
     alignItems: "center",
@@ -307,7 +476,7 @@ const styles = StyleSheet.create({
     borderColor: "#2F3336",
     borderRadius: 8,
   },
-  modalInputWithIcon: {
+  modalInput: {
     flex: 1,
     paddingHorizontal: 14,
     paddingVertical: 10,
