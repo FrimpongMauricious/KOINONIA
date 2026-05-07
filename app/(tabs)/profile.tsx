@@ -5,6 +5,7 @@ import { Modal, Pressable, StyleSheet, Text, TextInput, View } from "react-nativ
 import { AppLogo } from "@/components/app-logo";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
+import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useAuth } from "@/src/auth/auth-context";
 import { deleteMyAccount } from "@/src/api/users";
 
@@ -14,6 +15,7 @@ export default function ProfileScreen() {
 
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [deletePassword, setDeletePassword] = useState("");
+  const [showDeletePassword, setShowDeletePassword] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
@@ -100,14 +102,26 @@ export default function ProfileScreen() {
               This is permanent and cannot be undone. Enter your password to confirm.
             </Text>
 
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Password"
-              placeholderTextColor="#71767B"
-              secureTextEntry
-              value={deletePassword}
-              onChangeText={setDeletePassword}
-            />
+            <View style={styles.modalInputWrapper}>
+              <TextInput
+                style={styles.modalInputWithIcon}
+                placeholder="Password"
+                placeholderTextColor="#71767B"
+                secureTextEntry={!showDeletePassword}
+                value={deletePassword}
+                onChangeText={setDeletePassword}
+              />
+              <Pressable
+                onPress={() => setShowDeletePassword((v) => !v)}
+                style={styles.eyeBtn}
+              >
+                <IconSymbol
+                  size={20}
+                  name={showDeletePassword ? "eye.slash" : "eye"}
+                  color="#71767B"
+                />
+              </Pressable>
+            </View>
 
             {deleteError ? (
               <Text style={styles.errorText}>{deleteError}</Text>
@@ -120,6 +134,7 @@ export default function ProfileScreen() {
                   setDeleteModalVisible(false);
                   setDeletePassword("");
                   setDeleteError(null);
+                  setShowDeletePassword(false);
                 }}
                 disabled={deleteLoading}
               >
@@ -283,6 +298,25 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     color: "#E7E9EA",
     fontSize: 15,
+  },
+  modalInputWrapper: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#000000",
+    borderWidth: 1,
+    borderColor: "#2F3336",
+    borderRadius: 8,
+  },
+  modalInputWithIcon: {
+    flex: 1,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    color: "#E7E9EA",
+    fontSize: 15,
+  },
+  eyeBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 10,
   },
   modalActions: {
     flexDirection: "row",

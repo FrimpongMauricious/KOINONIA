@@ -23,6 +23,8 @@ const MAPPING = {
   "square.and.pencil": "edit-square",
   "heart.fill": "favorite",
   heart: "favorite-border",
+  eye: "visibility",
+  "eye.slash": "visibility-off",
   "bubble.left.fill": "chat",
   "bubble.left": "chat-bubble-outline",
   "arrow.2.squarepath": "repeat",

@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
 import { AppLogo } from "@/components/app-logo";
 import { ScreenContainer } from "@/components/screen-container";
+import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useAuth } from "@/src/auth/auth-context";
 
 export default function LoginScreen() {
@@ -11,6 +12,7 @@ export default function LoginScreen() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -43,14 +45,26 @@ export default function LoginScreen() {
             value={email}
             onChangeText={setEmail}
           />
-          <TextInput
-            style={styles.input}
-            placeholder="Password"
-            placeholderTextColor="#71767B"
-            secureTextEntry
-            value={password}
-            onChangeText={setPassword}
-          />
+          <View style={styles.inputWrapper}>
+            <TextInput
+              style={styles.inputWithIcon}
+              placeholder="Password"
+              placeholderTextColor="#71767B"
+              secureTextEntry={!showPassword}
+              value={password}
+              onChangeText={setPassword}
+            />
+            <Pressable
+              onPress={() => setShowPassword((v) => !v)}
+              style={styles.eyeBtn}
+            >
+              <IconSymbol
+                size={20}
+                name={showPassword ? "eye.slash" : "eye"}
+                color="#71767B"
+              />
+            </Pressable>
+          </View>
         </View>
 
         {errorMessage ? (
@@ -112,6 +126,26 @@ const styles = StyleSheet.create({
     paddingVertical: 13,
     color: "#E7E9EA",
     fontSize: 16,
+  },
+  inputWrapper: {
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#16181C",
+    borderWidth: 1,
+    borderColor: "#2F3336",
+    borderRadius: 8,
+  },
+  inputWithIcon: {
+    flex: 1,
+    paddingHorizontal: 16,
+    paddingVertical: 13,
+    color: "#E7E9EA",
+    fontSize: 16,
+  },
+  eyeBtn: {
+    paddingHorizontal: 14,
+    paddingVertical: 13,
   },
   primaryBtn: {
     width: "100%",
