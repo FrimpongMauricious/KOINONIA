@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import { ActivityIndicator, FlatList, StyleSheet } from "react-native";
+import { ActivityIndicator, FlatList, StyleSheet, Text, View } from "react-native";
 
 import { AppLogo } from "@/components/app-logo";
 import { ThemedText } from "@/components/themed-text";
@@ -34,16 +34,14 @@ export default function HomeScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      <ThemedView style={styles.header}>
-        <AppLogo size={56} />
-        <ThemedText type="title">Koinonia</ThemedText>
-        <ThemedText>
-          {isGuest ? "Guest Mode" : "Registered User"}
-        </ThemedText>
-      </ThemedView>
+      <View style={styles.header}>
+        <AppLogo size={28} />
+        <Text style={styles.headerTitle}>Koinonia</Text>
+        {isGuest ? <Text style={styles.guestBadge}>Guest</Text> : null}
+      </View>
 
       {isLoading ? (
-        <ActivityIndicator style={styles.loader} size="large" />
+        <ActivityIndicator style={styles.loader} size="large" color="#1D9BF0" />
       ) : (
         <FlatList
           data={posts}
@@ -63,7 +61,7 @@ export default function HomeScreen() {
           }
           ListFooterComponent={
             isFetchingNextPage ? (
-              <ActivityIndicator style={styles.footerSpinner} />
+              <ActivityIndicator style={styles.footerSpinner} color="#1D9BF0" />
             ) : null
           }
           renderItem={({ item }) => (
@@ -94,15 +92,33 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingHorizontal: 16,
-    paddingTop: 20,
   },
   header: {
-    gap: 4,
-    marginBottom: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: "#2F3336",
+  },
+  headerTitle: {
+    color: "#E7E9EA",
+    fontSize: 20,
+    fontWeight: "800",
+    flex: 1,
+  },
+  guestBadge: {
+    color: "#71767B",
+    fontSize: 13,
+    borderWidth: 1,
+    borderColor: "#2F3336",
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
   },
   list: {
-    gap: 10,
     paddingBottom: 16,
   },
   loader: {
@@ -111,6 +127,7 @@ const styles = StyleSheet.create({
   emptyText: {
     textAlign: "center",
     marginTop: 40,
+    paddingHorizontal: 16,
   },
   footerSpinner: {
     paddingVertical: 16,

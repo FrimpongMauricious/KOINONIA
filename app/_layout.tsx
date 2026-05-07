@@ -74,7 +74,7 @@ export default function RootLayout() {
           <AuthProvider>
             <RootLayoutInner />
           </AuthProvider>
-          <StatusBar style="dark" />
+          <StatusBar style="light" />
         </ThemeProvider>
       </SafeAreaProvider>
     </QueryClientProvider>

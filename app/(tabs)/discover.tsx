@@ -1,4 +1,4 @@
-import { StyleSheet } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
@@ -6,7 +6,9 @@ import { ThemedView } from "@/components/themed-view";
 export default function DiscoverScreen() {
   return (
     <ThemedView style={styles.container}>
-      <ThemedText type="title">Discover</ThemedText>
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Discover</Text>
+      </View>
       <ThemedText style={styles.placeholder}>
         User search coming in the next update.
       </ThemedText>
@@ -17,11 +19,23 @@ export default function DiscoverScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
-    gap: 10,
+  },
+  header: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: "#2F3336",
+  },
+  headerTitle: {
+    color: "#E7E9EA",
+    fontSize: 20,
+    fontWeight: "800",
   },
   placeholder: {
-    marginTop: 24,
+    marginTop: 40,
     textAlign: "center",
+    paddingHorizontal: 16,
+    color: "#71767B",
   },
 });

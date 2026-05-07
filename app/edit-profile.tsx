@@ -1,19 +1,14 @@
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { Pressable, StyleSheet, TextInput } from "react-native";
+import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
 import { ScreenContainer } from "@/components/screen-container";
 import { ThemedText } from "@/components/themed-text";
-import { ThemedView } from "@/components/themed-view";
-import { Colors } from "@/constants/theme";
-import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useAuth } from "@/src/auth/auth-context";
 import { updateMyProfile } from "@/src/api/users";
 
 export default function EditProfileScreen() {
   const router = useRouter();
-  const colorScheme = useColorScheme() ?? "light";
-  const palette = Colors[colorScheme];
   const { user, refreshUser } = useAuth();
 
   const [displayName, setDisplayName] = useState(user?.displayName ?? "");
@@ -41,34 +36,21 @@ export default function EditProfileScreen() {
 
   return (
     <ScreenContainer scroll keyboardAvoiding contentStyle={styles.container}>
-      <ThemedView style={styles.inner}>
-        <ThemedText type="title">Edit Profile</ThemedText>
+      <View style={styles.inner}>
+        <Text style={styles.sectionLabel}>Display name</Text>
         <TextInput
-          style={[
-            styles.input,
-            {
-              borderColor: palette.border,
-              backgroundColor: palette.surface,
-              color: palette.text,
-            },
-          ]}
+          style={styles.input}
           placeholder="Display name"
-          placeholderTextColor={palette.icon}
+          placeholderTextColor="#71767B"
           value={displayName}
           onChangeText={setDisplayName}
         />
+
+        <Text style={styles.sectionLabel}>Bio</Text>
         <TextInput
-          style={[
-            styles.input,
-            styles.bioInput,
-            {
-              borderColor: palette.border,
-              backgroundColor: palette.surface,
-              color: palette.text,
-            },
-          ]}
+          style={[styles.input, styles.bioInput]}
           placeholder="Bio"
-          placeholderTextColor={palette.icon}
+          placeholderTextColor="#71767B"
           multiline
           textAlignVertical="top"
           value={bio}
@@ -76,23 +58,19 @@ export default function EditProfileScreen() {
         />
 
         {errorMessage ? (
-          <ThemedText style={styles.error}>{errorMessage}</ThemedText>
+          <Text style={styles.error}>{errorMessage}</Text>
         ) : null}
 
         <Pressable
-          style={[
-            styles.button,
-            { borderColor: palette.border, backgroundColor: palette.surface },
-            loading && styles.buttonDisabled,
-          ]}
+          style={[styles.saveBtn, loading && styles.btnDisabled]}
           onPress={handleSave}
           disabled={loading}
         >
-          <ThemedText type="defaultSemiBold">
+          <Text style={styles.saveBtnText}>
             {loading ? "Saving…" : "Save"}
-          </ThemedText>
+          </Text>
         </Pressable>
-      </ThemedView>
+      </View>
     </ScreenContainer>
   );
 }
@@ -100,33 +78,49 @@ export default function EditProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    padding: 16,
   },
   inner: {
-    padding: 16,
-    gap: 10,
+    padding: 20,
+    gap: 8,
+  },
+  sectionLabel: {
+    color: "#71767B",
+    fontSize: 13,
+    fontWeight: "600",
+    marginTop: 8,
+    marginBottom: 2,
   },
   input: {
-    borderWidth: 1,
+    backgroundColor: "#16181C",
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: "#2F3336",
     borderRadius: 8,
-    paddingHorizontal: 12,
+    paddingHorizontal: 14,
     paddingVertical: 10,
+    color: "#E7E9EA",
+    fontSize: 15,
     minHeight: 44,
   },
   bioInput: {
     minHeight: 100,
   },
-  button: {
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingVertical: 10,
+  saveBtn: {
+    backgroundColor: "#1D9BF0",
+    borderRadius: 24,
+    paddingVertical: 12,
     alignItems: "center",
+    marginTop: 16,
   },
-  buttonDisabled: {
-    opacity: 0.5,
+  btnDisabled: {
+    opacity: 0.4,
+  },
+  saveBtnText: {
+    color: "#FFFFFF",
+    fontWeight: "700",
+    fontSize: 15,
   },
   error: {
-    color: "#c0392b",
+    color: "#F4212E",
     fontSize: 13,
   },
 });

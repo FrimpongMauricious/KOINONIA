@@ -1,35 +1,26 @@
-/**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
- */
-
 import { Platform } from "react-native";
 
-const PURE_WHITE = "#FFFFFF";
-const PURE_BLACK = "#000000";
-const POWDER_BLUE = "#B0E0E6";
+const TWITTER_BLUE = "#1D9BF0";
+const TWITTER_TEXT = "#E7E9EA";
+const TWITTER_MUTED = "#71767B";
+const TWITTER_BG = "#000000";
+const TWITTER_SURFACE = "#16181C";
+const TWITTER_BORDER = "#2F3336";
+
+const darkPalette = {
+  text: TWITTER_TEXT,
+  background: TWITTER_BG,
+  surface: TWITTER_SURFACE,
+  tint: TWITTER_BLUE,
+  icon: TWITTER_MUTED,
+  border: TWITTER_BORDER,
+  tabIconDefault: TWITTER_MUTED,
+  tabIconSelected: TWITTER_TEXT,
+};
 
 export const Colors = {
-  light: {
-    text: PURE_BLACK,
-    background: PURE_WHITE,
-    surface: PURE_WHITE,
-    tint: POWDER_BLUE,
-    icon: PURE_BLACK,
-    border: POWDER_BLUE,
-    tabIconDefault: "#6F7B82",
-    tabIconSelected: PURE_BLACK,
-  },
-  dark: {
-    text: PURE_BLACK,
-    background: PURE_WHITE,
-    surface: PURE_WHITE,
-    tint: POWDER_BLUE,
-    icon: PURE_BLACK,
-    border: POWDER_BLUE,
-    tabIconDefault: "#6F7B82",
-    tabIconSelected: PURE_BLACK,
-  },
+  light: darkPalette,
+  dark: darkPalette,
 };
 
 export const Fonts = Platform.select({

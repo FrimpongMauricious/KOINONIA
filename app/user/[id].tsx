@@ -1,12 +1,10 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { ActivityIndicator, FlatList, Pressable, StyleSheet, View } from "react-native";
+import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import { useInfiniteQuery } from "@tanstack/react-query";
 
 import { ScreenContainer } from "@/components/screen-container";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
-import { Colors } from "@/constants/theme";
-import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useAuth } from "@/src/auth/auth-context";
 import { fetchUserPosts } from "@/src/api/users";
 import { PostCard } from "@/src/features/feed/components/post-card";
@@ -22,8 +20,6 @@ export default function CreatorProfileScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const numericId = parseInt(id ?? "0", 10);
   const router = useRouter();
-  const colorScheme = useColorScheme() ?? "light";
-  const palette = Colors[colorScheme];
   const { user } = useAuth();
   const isGuest = !user;
 
@@ -52,7 +48,7 @@ export default function CreatorProfileScreen() {
   if (profileLoading) {
     return (
       <ScreenContainer contentStyle={styles.centered}>
-        <ActivityIndicator size="large" />
+        <ActivityIndicator size="large" color="#1D9BF0" />
       </ScreenContainer>
     );
   }
@@ -60,7 +56,7 @@ export default function CreatorProfileScreen() {
   if (isError || !profile) {
     return (
       <ScreenContainer contentStyle={styles.container}>
-        <ThemedText>User not found.</ThemedText>
+        <ThemedText style={styles.paddedText}>User not found.</ThemedText>
       </ScreenContainer>
     );
   }
@@ -70,39 +66,41 @@ export default function CreatorProfileScreen() {
 
   return (
     <ScreenContainer contentStyle={styles.container}>
-      <ThemedView style={[styles.headerCard, { borderColor: palette.border }]}>
-        <View style={[styles.avatar, { borderColor: palette.border, backgroundColor: palette.background }]}>
-          <ThemedText type="defaultSemiBold" style={styles.avatarInitial}>
-            {initial}
-          </ThemedText>
+      <View style={styles.profileHeader}>
+        <View style={styles.topRow}>
+          <View style={styles.avatar}>
+            <Text style={styles.avatarText}>{initial}</Text>
+          </View>
+
+          {!isOwnProfile && !isGuest ? (
+            <Pressable
+              style={[styles.followBtn, isFollowing && styles.followingBtn]}
+              onPress={() =>
+                toggleFollow.mutate({ userId: numericId, currentlyFollowing: isFollowing })
+              }
+              disabled={toggleFollow.isPending}
+            >
+              <Text style={[styles.followBtnText, isFollowing && styles.followingBtnText]}>
+                {isFollowing ? "Following" : "Follow"}
+              </Text>
+            </Pressable>
+          ) : null}
         </View>
 
-        <ThemedText type="title">{displayName}</ThemedText>
-        <ThemedText>@{profile.username}</ThemedText>
-        {profile.bio ? <ThemedText>{profile.bio}</ThemedText> : null}
-        <ThemedText>
+        <Text style={styles.displayName}>{displayName}</Text>
+        <Text style={styles.username}>@{profile.username}</Text>
+        {profile.bio ? <Text style={styles.bio}>{profile.bio}</Text> : null}
+        <Text style={styles.stats}>
           {profile.followerCount} followers · {profile.followingCount} following
-        </ThemedText>
+        </Text>
+      </View>
 
-        {!isOwnProfile && !isGuest ? (
-          <Pressable
-            style={[styles.followButton, { borderColor: palette.border }]}
-            onPress={() =>
-              toggleFollow.mutate({ userId: numericId, currentlyFollowing: isFollowing })
-            }
-            disabled={toggleFollow.isPending}
-          >
-            <ThemedText type="defaultSemiBold">
-              {isFollowing ? "Following" : "Follow"}
-            </ThemedText>
-          </Pressable>
-        ) : null}
-      </ThemedView>
-
-      <ThemedText type="subtitle">Posts</ThemedText>
+      <View style={styles.postsHeader}>
+        <Text style={styles.postsTitle}>Posts</Text>
+      </View>
 
       {postsQuery.isLoading ? (
-        <ActivityIndicator />
+        <ActivityIndicator style={styles.paddedText} color="#1D9BF0" />
       ) : (
         <FlatList
           data={posts}
@@ -114,11 +112,11 @@ export default function CreatorProfileScreen() {
           }}
           onEndReachedThreshold={0.5}
           ListEmptyComponent={
-            <ThemedText>This creator has no posts yet.</ThemedText>
+            <ThemedText style={styles.emptyText}>This creator has no posts yet.</ThemedText>
           }
           ListFooterComponent={
             postsQuery.isFetchingNextPage ? (
-              <ActivityIndicator style={styles.footerSpinner} />
+              <ActivityIndicator style={styles.footerSpinner} color="#1D9BF0" />
             ) : null
           }
           renderItem={({ item }) => (
@@ -149,42 +147,97 @@ export default function CreatorProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
-    gap: 10,
   },
   centered: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
   },
-  headerCard: {
-    borderWidth: 1,
-    borderRadius: 12,
-    padding: 12,
+  paddedText: {
+    padding: 16,
+  },
+  profileHeader: {
+    padding: 16,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: "#2F3336",
     gap: 4,
+  },
+  topRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "flex-start",
+    marginBottom: 10,
   },
   avatar: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    borderWidth: 1,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: "#1D9BF0",
     alignItems: "center",
     justifyContent: "center",
   },
-  avatarInitial: {
-    fontSize: 22,
+  avatarText: {
+    color: "#FFFFFF",
+    fontSize: 26,
+    fontWeight: "700",
   },
-  followButton: {
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+  displayName: {
+    color: "#E7E9EA",
+    fontSize: 20,
+    fontWeight: "700",
+  },
+  username: {
+    color: "#71767B",
+    fontSize: 15,
+  },
+  bio: {
+    color: "#E7E9EA",
+    fontSize: 15,
+    lineHeight: 22,
     marginTop: 6,
   },
+  stats: {
+    color: "#71767B",
+    fontSize: 14,
+    marginTop: 8,
+  },
+  followBtn: {
+    backgroundColor: "#EFF3F4",
+    borderRadius: 20,
+    paddingHorizontal: 18,
+    paddingVertical: 8,
+  },
+  followingBtn: {
+    backgroundColor: "transparent",
+    borderWidth: 1,
+    borderColor: "#536471",
+  },
+  followBtnText: {
+    color: "#0F1419",
+    fontWeight: "700",
+    fontSize: 14,
+  },
+  followingBtnText: {
+    color: "#E7E9EA",
+  },
+  postsHeader: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: "#2F3336",
+  },
+  postsTitle: {
+    color: "#E7E9EA",
+    fontWeight: "700",
+    fontSize: 17,
+  },
   list: {
-    gap: 10,
     paddingBottom: 24,
+  },
+  emptyText: {
+    paddingHorizontal: 16,
+    paddingTop: 20,
+    color: "#71767B",
   },
   footerSpinner: {
     paddingVertical: 16,

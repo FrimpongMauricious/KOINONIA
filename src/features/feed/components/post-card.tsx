@@ -1,11 +1,7 @@
 import { useState } from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
-import { ThemedText } from "@/components/themed-text";
-import { ThemedView } from "@/components/themed-view";
 import { IconSymbol } from "@/components/ui/icon-symbol";
-import { Colors } from "@/constants/theme";
-import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useAuth } from "@/src/auth/auth-context";
 import { PostResponse } from "@/src/api/types";
 import { useToggleFollow } from "@/src/features/follows/hooks/use-follow-mutations";
@@ -13,6 +9,13 @@ import { useToggleFollow } from "@/src/features/follows/hooks/use-follow-mutatio
 // TODO F1d: feed posts don't include followedByCurrentUser on the author DTO.
 // The Follow button's state is local-only and resets on feed reload.
 // Fix: add followedByCurrentUser to the backend's AuthorRef in F1d.
+
+const LIKE_ACTIVE = "#F91880";
+const REPOST_ACTIVE = "#00BA7C";
+const MUTED = "#71767B";
+const TEXT = "#E7E9EA";
+const BORDER = "#2F3336";
+const AVATAR_BG = "#1D9BF0";
 
 interface PostCardProps {
   post: PostResponse;
@@ -39,19 +42,10 @@ export function PostCard({
   onToggleRepost,
   onToggleFavorite,
 }: PostCardProps) {
-  const colorScheme = useColorScheme() ?? "light";
-  const palette = Colors[colorScheme];
   const { user } = useAuth();
 
   const isLiked = post.likedByCurrentUser;
   const isReshared = post.repostedByCurrentUser;
-
-  const likeActiveColor = "#D10000";
-  const reshareDefaultColor = "#B0E0E6";
-  const reshareActiveColor = "#8A0303";
-
-  const likeColor = isLiked ? likeActiveColor : palette.icon;
-  const reshareColor = isReshared ? reshareActiveColor : reshareDefaultColor;
 
   const authorDisplayName = post.author.displayName ?? post.author.username;
   const authorInitial = authorDisplayName.charAt(0).toUpperCase();
@@ -68,204 +62,173 @@ export function PostCard({
   };
 
   return (
-    <ThemedView
-      style={[
-        styles.card,
-        { borderColor: palette.border, backgroundColor: palette.surface },
-      ]}
-    >
-      <View style={styles.authorRow}>
-        <Pressable
-          onPress={onOpenAuthor}
-          disabled={!onOpenAuthor}
-          style={styles.authorIdentity}
-        >
-          <View
-            style={[
-              styles.avatar,
-              {
-                borderColor: palette.border,
-                backgroundColor: palette.background,
-              },
-            ]}
-          >
-            <ThemedText type="defaultSemiBold">{authorInitial}</ThemedText>
-          </View>
-          <View>
-            <ThemedText type="defaultSemiBold">{authorDisplayName}</ThemedText>
-            <ThemedText>@{post.author.username}</ThemedText>
+    <Pressable onPress={onOpen} style={styles.card}>
+      <View style={styles.row}>
+        <Pressable onPress={onOpenAuthor} disabled={!onOpenAuthor} style={styles.avatarCol}>
+          <View style={styles.avatar}>
+            <Text style={styles.avatarText}>{authorInitial}</Text>
           </View>
         </Pressable>
 
-        {!isOwnPost && user ? (
-          <Pressable
-            style={[styles.followButton, { borderColor: palette.border }]}
-            onPress={handleFollow}
-            disabled={toggleFollow.isPending}
-          >
-            <ThemedText type="defaultSemiBold">
-              {following ? "Following" : "Follow"}
-            </ThemedText>
-          </Pressable>
-        ) : null}
+        <View style={styles.contentCol}>
+          <View style={styles.authorRow}>
+            <Pressable onPress={onOpenAuthor} disabled={!onOpenAuthor} style={styles.authorInfo}>
+              <Text style={styles.displayName} numberOfLines={1}>{authorDisplayName}</Text>
+              <Text style={styles.username} numberOfLines={1}> @{post.author.username}</Text>
+            </Pressable>
+
+            {!isOwnPost && user ? (
+              <Pressable
+                style={[styles.followBtn, following && styles.followingBtn]}
+                onPress={handleFollow}
+                disabled={toggleFollow.isPending}
+              >
+                <Text style={[styles.followBtnText, following && styles.followingBtnText]}>
+                  {following ? "Following" : "Follow"}
+                </Text>
+              </Pressable>
+            ) : null}
+          </View>
+
+          <Text style={styles.content}>{post.content}</Text>
+
+          <View style={styles.actionsRow}>
+            <Pressable onPress={onAddComment} style={styles.action}>
+              <IconSymbol size={18} name="bubble.left" color={MUTED} />
+              <Text style={styles.actionCount}>{post.commentCount}</Text>
+            </Pressable>
+
+            <Pressable
+              onPress={onToggleRepost}
+              style={styles.action}
+              disabled={!canRepost || !onToggleRepost}
+            >
+              <IconSymbol
+                size={18}
+                name="arrow.2.squarepath"
+                color={isReshared ? REPOST_ACTIVE : MUTED}
+              />
+              <Text style={[styles.actionCount, isReshared && { color: REPOST_ACTIVE }]}>
+                {post.repostCount}
+              </Text>
+            </Pressable>
+
+            <Pressable
+              onPress={onToggleLike}
+              style={styles.action}
+              disabled={!canLike || !onToggleLike}
+            >
+              <IconSymbol
+                size={18}
+                name={isLiked ? "heart.fill" : "heart"}
+                color={isLiked ? LIKE_ACTIVE : MUTED}
+              />
+              <Text style={[styles.actionCount, isLiked && { color: LIKE_ACTIVE }]}>
+                {post.likeCount}
+              </Text>
+            </Pressable>
+
+            <Pressable
+              onPress={onToggleFavorite}
+              style={styles.action}
+              disabled={!canFavorite || !onToggleFavorite}
+            >
+              <IconSymbol size={18} name="bookmark" color={MUTED} />
+            </Pressable>
+          </View>
+        </View>
       </View>
-
-      <ThemedText>{post.content}</ThemedText>
-
-      <View style={styles.metricsRow}>
-        <View style={styles.metricItem}>
-          <IconSymbol size={16} name="heart.fill" color={likeColor} />
-          <ThemedText>{post.likeCount}</ThemedText>
-        </View>
-        <View style={styles.metricItem}>
-          <IconSymbol size={16} name="bubble.left.fill" color={palette.icon} />
-          <ThemedText>{post.commentCount}</ThemedText>
-        </View>
-        <View style={styles.metricItem}>
-          <IconSymbol
-            size={16}
-            name="arrow.2.squarepath"
-            color={reshareColor}
-          />
-          <ThemedText>{post.repostCount}</ThemedText>
-        </View>
-      </View>
-
-      <ThemedView style={styles.actionsRow}>
-        <Pressable
-          style={[styles.actionButton, { borderColor: palette.border }]}
-          onPress={onToggleLike}
-          disabled={!canLike || !onToggleLike}
-        >
-          <View style={styles.buttonContent}>
-            <IconSymbol size={16} name="heart.fill" color={likeColor} />
-            <ThemedText lightColor={likeColor} darkColor={likeColor}>
-              Like
-            </ThemedText>
-          </View>
-        </Pressable>
-
-        <Pressable
-          style={[styles.actionButton, { borderColor: palette.border }]}
-          onPress={onAddComment}
-        >
-          <View style={styles.buttonContent}>
-            <IconSymbol
-              size={16}
-              name="bubble.left.fill"
-              color={palette.icon}
-            />
-            <ThemedText>Comment</ThemedText>
-          </View>
-        </Pressable>
-
-        <Pressable
-          style={[styles.actionButton, { borderColor: palette.border }]}
-          onPress={onToggleRepost}
-          disabled={!canRepost || !onToggleRepost}
-        >
-          <View style={styles.buttonContent}>
-            <IconSymbol
-              size={16}
-              name="arrow.2.squarepath"
-              color={reshareColor}
-            />
-            <ThemedText lightColor={reshareColor} darkColor={reshareColor}>
-              {canRepost ? "Repost" : "Login to repost"}
-            </ThemedText>
-          </View>
-        </Pressable>
-      </ThemedView>
-
-      <ThemedView style={styles.actionsRow}>
-        <Pressable
-          style={[styles.actionButton, { borderColor: palette.border }]}
-          onPress={onToggleFavorite}
-          disabled={!canFavorite || !onToggleFavorite}
-        >
-          <View style={styles.buttonContent}>
-            <IconSymbol size={16} name="bookmark.fill" color={palette.icon} />
-            <ThemedText>
-              {canFavorite ? "Favorite" : "Login to favorite"}
-            </ThemedText>
-          </View>
-        </Pressable>
-
-        <Pressable
-          style={[styles.actionButton, { borderColor: palette.border }]}
-          onPress={onOpen}
-          disabled={!onOpen}
-        >
-          <View style={styles.buttonContent}>
-            <IconSymbol
-              size={16}
-              name="arrow.up.right.square"
-              color={palette.icon}
-            />
-            <ThemedText>Open</ThemedText>
-          </View>
-        </Pressable>
-      </ThemedView>
-    </ThemedView>
+    </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    borderWidth: 1,
-    borderRadius: 10,
-    padding: 12,
+    backgroundColor: "#000000",
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: BORDER,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  row: {
+    flexDirection: "row",
+    gap: 10,
+  },
+  avatarCol: {},
+  avatar: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: AVATAR_BG,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  avatarText: {
+    color: "#FFFFFF",
+    fontWeight: "700",
+    fontSize: 18,
+  },
+  contentCol: {
+    flex: 1,
     gap: 5,
   },
   authorRow: {
     flexDirection: "row",
+    alignItems: "center",
     justifyContent: "space-between",
-    alignItems: "center",
-    gap: 8,
+    gap: 6,
   },
-  authorIdentity: {
+  authorInfo: {
     flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
+    alignItems: "baseline",
     flex: 1,
+    flexWrap: "wrap",
   },
-  avatar: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
+  displayName: {
+    color: TEXT,
+    fontWeight: "700",
+    fontSize: 15,
+  },
+  username: {
+    color: MUTED,
+    fontSize: 14,
+  },
+  followBtn: {
+    backgroundColor: "#EFF3F4",
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 5,
+  },
+  followingBtn: {
+    backgroundColor: "transparent",
     borderWidth: 1,
-    alignItems: "center",
-    justifyContent: "center",
+    borderColor: "#536471",
   },
-  followButton: {
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
+  followBtnText: {
+    color: "#0F1419",
+    fontWeight: "700",
+    fontSize: 13,
   },
-  metricsRow: {
-    flexDirection: "row",
-    gap: 12,
+  followingBtnText: {
+    color: TEXT,
   },
-  metricItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
+  content: {
+    color: TEXT,
+    fontSize: 15,
+    lineHeight: 22,
   },
   actionsRow: {
     flexDirection: "row",
-    gap: 8,
-    flexWrap: "wrap",
+    marginTop: 6,
+    gap: 28,
   },
-  actionButton: {
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-  },
-  buttonContent: {
+  action: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
+    gap: 5,
+  },
+  actionCount: {
+    color: MUTED,
+    fontSize: 13,
   },
 });

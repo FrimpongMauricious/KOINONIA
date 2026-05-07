@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import { ActivityIndicator, FlatList, StyleSheet } from "react-native";
+import { ActivityIndicator, FlatList, StyleSheet, Text, View } from "react-native";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
@@ -33,14 +33,16 @@ export default function FavoritesScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      <ThemedText type="title">Favorites</ThemedText>
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Bookmarks</Text>
+      </View>
 
       {isGuest ? (
-        <ThemedText>
-          Favorites are available for registered users only.
+        <ThemedText style={styles.guestText}>
+          Bookmarks are available for registered users only.
         </ThemedText>
       ) : isLoading ? (
-        <ActivityIndicator style={styles.loader} size="large" />
+        <ActivityIndicator style={styles.loader} size="large" color="#1D9BF0" />
       ) : (
         <FlatList
           data={posts}
@@ -55,12 +57,12 @@ export default function FavoritesScreen() {
           onEndReachedThreshold={0.5}
           ListEmptyComponent={
             <ThemedText style={styles.emptyText}>
-              No favorites yet — tap the bookmark on any post.
+              No bookmarks yet — tap the bookmark on any post.
             </ThemedText>
           }
           ListFooterComponent={
             isFetchingNextPage ? (
-              <ActivityIndicator style={styles.footerSpinner} />
+              <ActivityIndicator style={styles.footerSpinner} color="#1D9BF0" />
             ) : null
           }
           renderItem={({ item }) => (
@@ -91,19 +93,33 @@ export default function FavoritesScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
-    gap: 10,
+  },
+  header: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: "#2F3336",
+  },
+  headerTitle: {
+    color: "#E7E9EA",
+    fontSize: 20,
+    fontWeight: "800",
   },
   list: {
-    gap: 10,
-    paddingBottom: 20,
+    paddingBottom: 16,
   },
   loader: {
     flex: 1,
   },
+  guestText: {
+    paddingHorizontal: 16,
+    marginTop: 24,
+  },
   emptyText: {
     textAlign: "center",
     marginTop: 40,
+    paddingHorizontal: 16,
   },
   footerSpinner: {
     paddingVertical: 16,

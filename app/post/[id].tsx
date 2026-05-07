@@ -5,6 +5,7 @@ import {
   FlatList,
   Pressable,
   StyleSheet,
+  Text,
   TextInput,
   View,
 } from "react-native";
@@ -12,9 +13,6 @@ import { useQuery } from "@tanstack/react-query";
 
 import { ScreenContainer } from "@/components/screen-container";
 import { ThemedText } from "@/components/themed-text";
-import { ThemedView } from "@/components/themed-view";
-import { Colors } from "@/constants/theme";
-import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useAuth } from "@/src/auth/auth-context";
 import { fetchPostById } from "@/src/api/posts";
 import { PostCard } from "@/src/features/feed/components/post-card";
@@ -33,8 +31,6 @@ export default function PostDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const numericId = parseInt(id ?? "0", 10);
-  const colorScheme = useColorScheme() ?? "light";
-  const palette = Colors[colorScheme];
   const { user } = useAuth();
   const isGuest = !user;
 
@@ -65,7 +61,7 @@ export default function PostDetailScreen() {
   if (postLoading) {
     return (
       <ScreenContainer contentStyle={styles.centered} keyboardAvoiding>
-        <ActivityIndicator size="large" />
+        <ActivityIndicator size="large" color="#1D9BF0" />
       </ScreenContainer>
     );
   }
@@ -73,7 +69,7 @@ export default function PostDetailScreen() {
   if (isError || !post) {
     return (
       <ScreenContainer contentStyle={styles.container} keyboardAvoiding>
-        <ThemedText>Post not found.</ThemedText>
+        <ThemedText style={styles.paddedText}>Post not found.</ThemedText>
       </ScreenContainer>
     );
   }
@@ -98,46 +94,39 @@ export default function PostDetailScreen() {
       />
 
       {!isGuest ? (
-        <ThemedView style={styles.composerRow}>
+        <View style={styles.composerRow}>
           <TextInput
-            style={[
-              styles.commentInput,
-              {
-                borderColor: palette.border,
-                backgroundColor: palette.surface,
-                color: palette.text,
-              },
-            ]}
-            placeholder="Write a comment…"
-            placeholderTextColor={palette.icon}
+            style={styles.commentInput}
+            placeholder="Post your reply…"
+            placeholderTextColor="#71767B"
             value={commentDraft}
             onChangeText={setCommentDraft}
             maxLength={500}
           />
           <Pressable
             style={[
-              styles.replyButton,
-              { borderColor: palette.border, backgroundColor: palette.surface },
-              (!commentDraft.trim() || createComment.isPending) &&
-                styles.buttonDisabled,
+              styles.replyBtn,
+              (!commentDraft.trim() || createComment.isPending) && styles.btnDisabled,
             ]}
             onPress={handleSubmitComment}
             disabled={!commentDraft.trim() || createComment.isPending}
           >
-            <ThemedText type="defaultSemiBold">
+            <Text style={styles.replyBtnText}>
               {createComment.isPending ? "…" : "Reply"}
-            </ThemedText>
+            </Text>
           </Pressable>
-        </ThemedView>
+        </View>
       ) : null}
 
-      <ThemedText type="subtitle">Comments ({comments.length})</ThemedText>
+      <View style={styles.commentsHeader}>
+        <Text style={styles.commentsTitle}>Replies ({comments.length})</Text>
+      </View>
 
       {commentsLoading ? (
-        <ActivityIndicator />
+        <ActivityIndicator style={styles.paddedText} color="#1D9BF0" />
       ) : comments.length === 0 ? (
         <ThemedText style={styles.emptyText}>
-          No comments yet — be the first to start the conversation.
+          No replies yet — be the first to start the conversation.
         </ThemedText>
       ) : (
         <FlatList
@@ -147,41 +136,31 @@ export default function PostDetailScreen() {
           scrollEnabled={false}
           renderItem={({ item }) => {
             const isOwn = item.author.id === user?.id;
-            const authorName =
-              item.author.displayName ?? item.author.username;
+            const authorName = item.author.displayName ?? item.author.username;
             const initial = authorName.charAt(0).toUpperCase();
 
             return (
-              <ThemedView
-                style={[styles.commentCard, { borderColor: palette.border }]}
-              >
-                <View style={styles.commentHeader}>
-                  <View
-                    style={[
-                      styles.commentAvatar,
-                      {
-                        borderColor: palette.border,
-                        backgroundColor: palette.background,
-                      },
-                    ]}
-                  >
-                    <ThemedText type="defaultSemiBold">{initial}</ThemedText>
-                  </View>
-                  <View style={styles.commentMeta}>
-                    <ThemedText type="defaultSemiBold">{authorName}</ThemedText>
-                    <ThemedText>@{item.author.username}</ThemedText>
-                  </View>
-                  {isOwn ? (
-                    <Pressable
-                      onPress={() => deleteCommentMutation.mutate(item.id)}
-                      disabled={deleteCommentMutation.isPending}
-                    >
-                      <ThemedText style={styles.deleteText}>Delete</ThemedText>
-                    </Pressable>
-                  ) : null}
+              <View style={styles.commentRow}>
+                <View style={styles.commentAvatar}>
+                  <Text style={styles.commentAvatarText}>{initial}</Text>
                 </View>
-                <ThemedText>{item.content}</ThemedText>
-              </ThemedView>
+                <View style={styles.commentBody}>
+                  <View style={styles.commentHeader}>
+                    <Text style={styles.commentName}>{authorName}</Text>
+                    <Text style={styles.commentUsername}> @{item.author.username}</Text>
+                    {isOwn ? (
+                      <Pressable
+                        onPress={() => deleteCommentMutation.mutate(item.id)}
+                        disabled={deleteCommentMutation.isPending}
+                        style={styles.deleteBtn}
+                      >
+                        <Text style={styles.deleteText}>Delete</Text>
+                      </Pressable>
+                    ) : null}
+                  </View>
+                  <Text style={styles.commentContent}>{item.content}</Text>
+                </View>
+              </View>
             );
           }}
         />
@@ -193,67 +172,121 @@ export default function PostDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
-    gap: 10,
   },
   centered: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
   },
+  paddedText: {
+    padding: 16,
+  },
   composerRow: {
     flexDirection: "row",
     gap: 8,
     alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: "#2F3336",
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: "#2F3336",
   },
   commentInput: {
     flex: 1,
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-  },
-  replyButton: {
-    borderWidth: 1,
-    borderRadius: 8,
+    backgroundColor: "#16181C",
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: "#2F3336",
+    borderRadius: 20,
     paddingHorizontal: 14,
-    paddingVertical: 10,
-    alignItems: "center",
+    paddingVertical: 9,
+    color: "#E7E9EA",
+    fontSize: 15,
   },
-  buttonDisabled: {
-    opacity: 0.5,
+  replyBtn: {
+    backgroundColor: "#1D9BF0",
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 9,
+  },
+  replyBtnText: {
+    color: "#FFFFFF",
+    fontWeight: "700",
+    fontSize: 14,
+  },
+  btnDisabled: {
+    opacity: 0.4,
+  },
+  commentsHeader: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: "#2F3336",
+  },
+  commentsTitle: {
+    color: "#E7E9EA",
+    fontWeight: "700",
+    fontSize: 17,
   },
   emptyText: {
-    marginTop: 4,
+    paddingHorizontal: 16,
+    paddingTop: 20,
+    color: "#71767B",
   },
   commentsList: {
-    gap: 8,
     paddingBottom: 24,
   },
-  commentCard: {
-    borderWidth: 1,
-    borderRadius: 8,
-    padding: 10,
-    gap: 6,
+  commentRow: {
+    flexDirection: "row",
+    gap: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: "#2F3336",
+  },
+  commentAvatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#1D9BF0",
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+  },
+  commentAvatarText: {
+    color: "#FFFFFF",
+    fontWeight: "700",
+    fontSize: 15,
+  },
+  commentBody: {
+    flex: 1,
+    gap: 4,
   },
   commentHeader: {
     flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
+    alignItems: "baseline",
+    flexWrap: "wrap",
   },
-  commentAvatar: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    borderWidth: 1,
-    alignItems: "center",
-    justifyContent: "center",
+  commentName: {
+    color: "#E7E9EA",
+    fontWeight: "700",
+    fontSize: 14,
   },
-  commentMeta: {
+  commentUsername: {
+    color: "#71767B",
+    fontSize: 13,
     flex: 1,
   },
+  deleteBtn: {
+    marginLeft: 8,
+  },
   deleteText: {
-    color: "#c0392b",
+    color: "#F4212E",
     fontSize: 12,
+  },
+  commentContent: {
+    color: "#E7E9EA",
+    fontSize: 15,
+    lineHeight: 21,
   },
 });

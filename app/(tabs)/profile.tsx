@@ -1,18 +1,14 @@
 import { Link } from "expo-router";
 import { useState } from "react";
-import { Modal, Pressable, StyleSheet, TextInput, View } from "react-native";
+import { Modal, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
 import { AppLogo } from "@/components/app-logo";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
-import { Colors } from "@/constants/theme";
-import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useAuth } from "@/src/auth/auth-context";
 import { deleteMyAccount } from "@/src/api/users";
 
 export default function ProfileScreen() {
-  const colorScheme = useColorScheme() ?? "light";
-  const palette = Colors[colorScheme];
   const { user, status, logout } = useAuth();
   const isGuest = status !== "authenticated";
 
@@ -35,79 +31,59 @@ export default function ProfileScreen() {
     }
   };
 
+  const displayName = user?.displayName ?? user?.username;
+  const initial = displayName?.charAt(0).toUpperCase() ?? "?";
+
   return (
     <ThemedView style={styles.container}>
-      <ThemedView
-        style={[
-          styles.profileImage,
-          { borderColor: palette.border, backgroundColor: palette.surface },
-        ]}
-      >
-        <AppLogo size={68} />
-      </ThemedView>
-      <ThemedText type="title">Profile</ThemedText>
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Profile</Text>
+      </View>
 
       {isGuest ? (
-        <>
-          <ThemedText>You are browsing as a guest.</ThemedText>
+        <View style={styles.guestSection}>
+          <AppLogo size={72} />
+          <ThemedText style={styles.guestText}>You are browsing as a guest.</ThemedText>
           <Link href="/(auth)/login" asChild>
-            <Pressable
-              style={[
-                styles.button,
-                { borderColor: palette.border, backgroundColor: palette.surface },
-              ]}
-            >
-              <ThemedText type="defaultSemiBold">Log in</ThemedText>
+            <Pressable style={styles.primaryBtn}>
+              <Text style={styles.primaryBtnText}>Log in</Text>
             </Pressable>
           </Link>
           <Link href="/(auth)/register" asChild>
-            <Pressable
-              style={[
-                styles.button,
-                { borderColor: palette.border, backgroundColor: palette.surface },
-              ]}
-            >
-              <ThemedText type="defaultSemiBold">Create account</ThemedText>
+            <Pressable style={styles.outlineBtn}>
+              <Text style={styles.outlineBtnText}>Create account</Text>
             </Pressable>
           </Link>
-        </>
+        </View>
       ) : (
         <>
-          <ThemedText type="subtitle">
-            {user?.displayName ?? user?.username}
-          </ThemedText>
-          <ThemedText>@{user?.username}</ThemedText>
-          {user?.bio ? <ThemedText>{user.bio}</ThemedText> : null}
-          <ThemedText>
-            {user?.followerCount ?? 0} followers ·{" "}
-            {user?.followingCount ?? 0} following
-          </ThemedText>
+          <View style={styles.profileSection}>
+            <View style={styles.avatarCircle}>
+              <Text style={styles.avatarText}>{initial}</Text>
+            </View>
+            <Text style={styles.displayName}>{displayName}</Text>
+            <Text style={styles.username}>@{user?.username}</Text>
+            {user?.bio ? <Text style={styles.bio}>{user.bio}</Text> : null}
+            <Text style={styles.stats}>
+              {user?.followerCount ?? 0} followers · {user?.followingCount ?? 0} following
+            </Text>
+          </View>
 
-          <Link href="/edit-profile" asChild>
-            <Pressable
-              style={[
-                styles.button,
-                { borderColor: palette.border, backgroundColor: palette.surface },
-              ]}
-            >
-              <ThemedText type="defaultSemiBold">Edit profile</ThemedText>
+          <View style={styles.actions}>
+            <Link href="/edit-profile" asChild>
+              <Pressable style={styles.outlineBtn}>
+                <Text style={styles.outlineBtnText}>Edit profile</Text>
+              </Pressable>
+            </Link>
+
+            <Pressable style={styles.logoutBtn} onPress={logout}>
+              <Text style={styles.logoutBtnText}>Log out</Text>
             </Pressable>
-          </Link>
 
-          <Pressable
-            style={[styles.button, styles.logoutButton]}
-            onPress={logout}
-          >
-            <ThemedText type="defaultSemiBold" style={styles.logoutText}>
-              Log out
-            </ThemedText>
-          </Pressable>
-
-          <Pressable onPress={() => setDeleteModalVisible(true)}>
-            <ThemedText style={styles.deleteAccountText}>
-              Delete account
-            </ThemedText>
-          </Pressable>
+            <Pressable onPress={() => setDeleteModalVisible(true)}>
+              <Text style={styles.deleteLink}>Delete account</Text>
+            </Pressable>
+          </View>
         </>
       )}
 
@@ -118,41 +94,28 @@ export default function ProfileScreen() {
         onRequestClose={() => setDeleteModalVisible(false)}
       >
         <View style={styles.modalOverlay}>
-          <ThemedView
-            style={[styles.modalCard, { borderColor: palette.border }]}
-          >
-            <ThemedText type="subtitle">Delete account</ThemedText>
-            <ThemedText>
-              This is permanent and cannot be undone. Enter your password to
-              confirm.
-            </ThemedText>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>Delete account</Text>
+            <Text style={styles.modalBody}>
+              This is permanent and cannot be undone. Enter your password to confirm.
+            </Text>
 
             <TextInput
-              style={[
-                styles.modalInput,
-                {
-                  borderColor: palette.border,
-                  backgroundColor: palette.surface,
-                  color: palette.text,
-                },
-              ]}
+              style={styles.modalInput}
               placeholder="Password"
-              placeholderTextColor={palette.icon}
+              placeholderTextColor="#71767B"
               secureTextEntry
               value={deletePassword}
               onChangeText={setDeletePassword}
             />
 
             {deleteError ? (
-              <ThemedText style={styles.errorText}>{deleteError}</ThemedText>
+              <Text style={styles.errorText}>{deleteError}</Text>
             ) : null}
 
             <View style={styles.modalActions}>
               <Pressable
-                style={[
-                  styles.button,
-                  { borderColor: palette.border, backgroundColor: palette.surface, flex: 1 },
-                ]}
+                style={[styles.outlineBtn, { flex: 1 }]}
                 onPress={() => {
                   setDeleteModalVisible(false);
                   setDeletePassword("");
@@ -160,28 +123,20 @@ export default function ProfileScreen() {
                 }}
                 disabled={deleteLoading}
               >
-                <ThemedText type="defaultSemiBold">Cancel</ThemedText>
+                <Text style={styles.outlineBtnText}>Cancel</Text>
               </Pressable>
 
               <Pressable
-                style={[
-                  styles.button,
-                  styles.confirmDeleteButton,
-                  (!deletePassword || deleteLoading) && styles.buttonDisabled,
-                  { flex: 1 },
-                ]}
+                style={[styles.deleteConfirmBtn, { flex: 1 }, (!deletePassword || deleteLoading) && styles.btnDisabled]}
                 onPress={handleDeleteAccount}
                 disabled={!deletePassword || deleteLoading}
               >
-                <ThemedText
-                  type="defaultSemiBold"
-                  style={styles.confirmDeleteText}
-                >
+                <Text style={styles.deleteConfirmText}>
                   {deleteLoading ? "Deleting…" : "Delete"}
-                </ThemedText>
+                </Text>
               </Pressable>
             </View>
-          </ThemedView>
+          </View>
         </View>
       </Modal>
     </ThemedView>
@@ -191,74 +146,165 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
-    gap: 10,
   },
-  profileImage: {
-    width: 84,
-    height: 84,
-    borderRadius: 42,
-    borderWidth: 1,
+  header: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: "#2F3336",
+  },
+  headerTitle: {
+    color: "#E7E9EA",
+    fontSize: 20,
+    fontWeight: "800",
+  },
+  guestSection: {
+    padding: 24,
+    alignItems: "center",
+    gap: 16,
+  },
+  guestText: {
+    textAlign: "center",
+  },
+  profileSection: {
+    padding: 20,
+    gap: 6,
+  },
+  avatarCircle: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: "#1D9BF0",
     alignItems: "center",
     justifyContent: "center",
+    marginBottom: 8,
   },
-  button: {
+  avatarText: {
+    color: "#FFFFFF",
+    fontSize: 28,
+    fontWeight: "700",
+  },
+  displayName: {
+    color: "#E7E9EA",
+    fontSize: 20,
+    fontWeight: "700",
+  },
+  username: {
+    color: "#71767B",
+    fontSize: 15,
+  },
+  bio: {
+    color: "#E7E9EA",
+    fontSize: 15,
+    lineHeight: 22,
+    marginTop: 4,
+  },
+  stats: {
+    color: "#71767B",
+    fontSize: 14,
+    marginTop: 6,
+  },
+  actions: {
+    paddingHorizontal: 20,
+    gap: 12,
+  },
+  primaryBtn: {
+    backgroundColor: "#1D9BF0",
+    borderRadius: 24,
+    paddingVertical: 12,
+    alignItems: "center",
+  },
+  primaryBtnText: {
+    color: "#FFFFFF",
+    fontWeight: "700",
+    fontSize: 15,
+  },
+  outlineBtn: {
     borderWidth: 1,
-    borderRadius: 8,
+    borderColor: "#536471",
+    borderRadius: 24,
     paddingVertical: 10,
     alignItems: "center",
   },
-  logoutButton: {
-    borderColor: "#c0392b",
-    backgroundColor: "transparent",
-    marginTop: 8,
+  outlineBtnText: {
+    color: "#E7E9EA",
+    fontWeight: "600",
+    fontSize: 15,
   },
-  logoutText: {
-    color: "#c0392b",
+  logoutBtn: {
+    borderWidth: 1,
+    borderColor: "#F4212E",
+    borderRadius: 24,
+    paddingVertical: 10,
+    alignItems: "center",
   },
-  deleteAccountText: {
-    color: "#c0392b",
+  logoutBtnText: {
+    color: "#F4212E",
+    fontWeight: "600",
+    fontSize: 15,
+  },
+  deleteLink: {
+    color: "#71767B",
     fontSize: 13,
     textAlign: "center",
     marginTop: 4,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
+    backgroundColor: "rgba(0,0,0,0.7)",
     justifyContent: "center",
     alignItems: "center",
     padding: 24,
   },
   modalCard: {
     width: "100%",
-    borderWidth: 1,
-    borderRadius: 12,
+    backgroundColor: "#16181C",
+    borderRadius: 16,
     padding: 20,
-    gap: 12,
-    backgroundColor: "white",
+    gap: 14,
+  },
+  modalTitle: {
+    color: "#E7E9EA",
+    fontSize: 18,
+    fontWeight: "700",
+  },
+  modalBody: {
+    color: "#71767B",
+    fontSize: 14,
+    lineHeight: 20,
   },
   modalInput: {
+    backgroundColor: "#000000",
     borderWidth: 1,
+    borderColor: "#2F3336",
     borderRadius: 8,
-    paddingHorizontal: 12,
+    paddingHorizontal: 14,
     paddingVertical: 10,
+    color: "#E7E9EA",
+    fontSize: 15,
   },
   modalActions: {
     flexDirection: "row",
     gap: 10,
   },
-  confirmDeleteButton: {
-    borderColor: "#c0392b",
-    backgroundColor: "transparent",
+  deleteConfirmBtn: {
+    borderWidth: 1,
+    borderColor: "#F4212E",
+    borderRadius: 24,
+    paddingVertical: 10,
+    alignItems: "center",
   },
-  confirmDeleteText: {
-    color: "#c0392b",
+  deleteConfirmText: {
+    color: "#F4212E",
+    fontWeight: "600",
+    fontSize: 15,
   },
-  buttonDisabled: {
-    opacity: 0.5,
+  btnDisabled: {
+    opacity: 0.4,
   },
   errorText: {
-    color: "#c0392b",
+    color: "#F4212E",
     fontSize: 13,
   },
 });

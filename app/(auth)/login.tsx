@@ -1,18 +1,12 @@
 import { Link } from "expo-router";
 import { useState } from "react";
-import { Pressable, StyleSheet, TextInput } from "react-native";
+import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
 import { AppLogo } from "@/components/app-logo";
 import { ScreenContainer } from "@/components/screen-container";
-import { ThemedText } from "@/components/themed-text";
-import { ThemedView } from "@/components/themed-view";
-import { Colors } from "@/constants/theme";
-import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useAuth } from "@/src/auth/auth-context";
 
 export default function LoginScreen() {
-  const colorScheme = useColorScheme() ?? "light";
-  const palette = Colors[colorScheme];
   const { login } = useAuth();
 
   const [email, setEmail] = useState("");
@@ -34,63 +28,49 @@ export default function LoginScreen() {
 
   return (
     <ScreenContainer scroll keyboardAvoiding contentStyle={styles.container}>
-      <ThemedView style={styles.inner}>
-        <AppLogo size={72} />
-        <ThemedText type="title">Log In</ThemedText>
-        <TextInput
-          style={[
-            styles.input,
-            {
-              borderColor: palette.border,
-              backgroundColor: palette.surface,
-              color: palette.text,
-            },
-          ]}
-          placeholder="Email"
-          placeholderTextColor={palette.icon}
-          autoCapitalize="none"
-          keyboardType="email-address"
-          value={email}
-          onChangeText={setEmail}
-        />
-        <TextInput
-          style={[
-            styles.input,
-            {
-              borderColor: palette.border,
-              backgroundColor: palette.surface,
-              color: palette.text,
-            },
-          ]}
-          placeholder="Password"
-          placeholderTextColor={palette.icon}
-          secureTextEntry
-          value={password}
-          onChangeText={setPassword}
-        />
+      <View style={styles.inner}>
+        <AppLogo size={64} />
+        <Text style={styles.title}>Log In</Text>
+        <Text style={styles.subtitle}>Welcome back to Koinonia</Text>
+
+        <View style={styles.formGroup}>
+          <TextInput
+            style={styles.input}
+            placeholder="Email"
+            placeholderTextColor="#71767B"
+            autoCapitalize="none"
+            keyboardType="email-address"
+            value={email}
+            onChangeText={setEmail}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Password"
+            placeholderTextColor="#71767B"
+            secureTextEntry
+            value={password}
+            onChangeText={setPassword}
+          />
+        </View>
 
         {errorMessage ? (
-          <ThemedText style={styles.error}>{errorMessage}</ThemedText>
+          <Text style={styles.error}>{errorMessage}</Text>
         ) : null}
 
         <Pressable
-          style={[
-            styles.button,
-            { borderColor: palette.border, backgroundColor: palette.surface },
-            loading && styles.buttonDisabled,
-          ]}
+          style={[styles.primaryBtn, loading && styles.btnDisabled]}
           onPress={handleSubmit}
           disabled={loading}
         >
-          <ThemedText type="defaultSemiBold">
+          <Text style={styles.primaryBtnText}>
             {loading ? "Please wait…" : "Continue"}
-          </ThemedText>
+          </Text>
         </Pressable>
 
         <Link href="/(auth)/register">
-          <ThemedText>Create an account</ThemedText>
+          <Text style={styles.linkText}>Don't have an account? <Text style={styles.linkAccent}>Sign up</Text></Text>
         </Link>
-      </ThemedView>
+      </View>
     </ScreenContainer>
   );
 }
@@ -99,29 +79,67 @@ const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
     justifyContent: "center",
-    padding: 16,
   },
   inner: {
-    padding: 16,
-    gap: 10,
-  },
-  input: {
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-  },
-  button: {
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingVertical: 10,
+    padding: 24,
+    gap: 16,
     alignItems: "center",
   },
-  buttonDisabled: {
+  title: {
+    color: "#E7E9EA",
+    fontSize: 28,
+    fontWeight: "800",
+    textAlign: "center",
+  },
+  subtitle: {
+    color: "#71767B",
+    fontSize: 15,
+    textAlign: "center",
+    marginTop: -8,
+  },
+  formGroup: {
+    width: "100%",
+    gap: 10,
+    marginTop: 8,
+  },
+  input: {
+    width: "100%",
+    backgroundColor: "#16181C",
+    borderWidth: 1,
+    borderColor: "#2F3336",
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 13,
+    color: "#E7E9EA",
+    fontSize: 16,
+  },
+  primaryBtn: {
+    width: "100%",
+    backgroundColor: "#1D9BF0",
+    borderRadius: 24,
+    paddingVertical: 14,
+    alignItems: "center",
+  },
+  btnDisabled: {
     opacity: 0.5,
   },
+  primaryBtnText: {
+    color: "#FFFFFF",
+    fontWeight: "700",
+    fontSize: 16,
+  },
+  linkText: {
+    color: "#71767B",
+    fontSize: 14,
+    textAlign: "center",
+  },
+  linkAccent: {
+    color: "#1D9BF0",
+  },
   error: {
-    color: "#c0392b",
+    color: "#F4212E",
     fontSize: 13,
+    textAlign: "center",
+    width: "100%",
   },
 });
