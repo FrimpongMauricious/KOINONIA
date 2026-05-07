@@ -13,7 +13,7 @@ export default function ProfileScreen() {
   const colorScheme = useColorScheme() ?? "light";
   const palette = Colors[colorScheme];
   const session = usePrototypeSession();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
 
   return (
     <ThemedView style={styles.container}>
@@ -81,6 +81,15 @@ export default function ProfileScreen() {
               <ThemedText type="defaultSemiBold">Edit profile</ThemedText>
             </Pressable>
           </Link>
+
+          <Pressable
+            style={[styles.button, styles.logoutButton]}
+            onPress={logout}
+          >
+            <ThemedText type="defaultSemiBold" style={styles.logoutText}>
+              Log out
+            </ThemedText>
+          </Pressable>
         </>
       )}
     </ThemedView>
@@ -106,5 +115,13 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingVertical: 10,
     alignItems: "center",
+  },
+  logoutButton: {
+    borderColor: "#c0392b",
+    backgroundColor: "transparent",
+    marginTop: 8,
+  },
+  logoutText: {
+    color: "#c0392b",
   },
 });
