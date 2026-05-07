@@ -1,10 +1,11 @@
-import { usePrototypeStore } from "@/src/state/prototype-store";
+import { useAuth } from "@/src/auth/auth-context";
 
 export function usePrototypeSession() {
-  const { session } = usePrototypeStore();
-
+  const { status, user } = useAuth();
   return {
-    ...session,
-    isGuest: session.accountType === "guest",
+    accountType: status === "authenticated" ? "registered" : "guest",
+    isGuest: status !== "authenticated",
+    activeUserId: user?.id?.toString() ?? undefined,
+    followingIds: [] as string[],
   };
 }

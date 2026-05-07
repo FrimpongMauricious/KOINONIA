@@ -21,7 +21,7 @@ import {
     User,
 } from "@/src/types/domain";
 
-export const FORCE_REGISTERED_TEST_MODE = true;
+export const FORCE_REGISTERED_TEST_MODE = false;
 
 interface PrototypeStoreValue {
   session: SessionState;
@@ -40,7 +40,7 @@ interface PrototypeStoreValue {
 
 const INITIAL_SESSION: SessionState = {
   accountType: FORCE_REGISTERED_TEST_MODE ? "registered" : "guest",
-  activeUserId: "u1",
+  activeUserId: undefined,
   followingIds: [],
 };
 
