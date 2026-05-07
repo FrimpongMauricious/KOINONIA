@@ -26,10 +26,46 @@ function patchFeedPost(
   };
 }
 
+function removeFavoritesPost(
+  old: InfiniteData<Page<PostResponse>> | undefined,
+  postId: number,
+): InfiniteData<Page<PostResponse>> | undefined {
+  if (!old) return old;
+  return {
+    ...old,
+    pages: old.pages.map((page) => ({
+      ...page,
+      content: page.content.filter((p) => p.id !== postId),
+    })),
+  };
+}
+
+function addFavoritesPost(
+  old: InfiniteData<Page<PostResponse>> | undefined,
+  post: PostResponse,
+): InfiniteData<Page<PostResponse>> | undefined {
+  if (!old) return old;
+  // Insert at top of first page; deduplicate in case it's already present
+  return {
+    ...old,
+    pages: old.pages.map((page, i) =>
+      i === 0
+        ? {
+            ...page,
+            content: [
+              post,
+              ...page.content.filter((p) => p.id !== post.id),
+            ],
+          }
+        : page,
+    ),
+  };
+}
+
 export function useToggleLike() {
   const queryClient = useQueryClient();
 
-  return useMutation<LikeResponse, Error, PostResponse>({
+  return useMutation<LikeResponse, Error, PostResponse, { snapshot: unknown }>({
     mutationFn: (post) =>
       post.likedByCurrentUser ? unlikePost(post.id) : likePost(post.id),
 
@@ -69,17 +105,13 @@ export function useToggleLike() {
           })),
       );
     },
-
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["feed"] });
-    },
   });
 }
 
 export function useToggleRepost() {
   const queryClient = useQueryClient();
 
-  return useMutation<PostResponse, Error, PostResponse>({
+  return useMutation<PostResponse, Error, PostResponse, { snapshot: unknown }>({
     mutationFn: (post) =>
       post.repostedByCurrentUser ? unrepostPost(post.id) : repostPost(post.id),
 
@@ -112,16 +144,8 @@ export function useToggleRepost() {
       queryClient.setQueryData<InfiniteData<Page<PostResponse>>>(
         ["feed"],
         (old) =>
-          patchFeedPost(old, post.id, (p) => ({
-            ...p,
-            repostedByCurrentUser: serverResponse.repostedByCurrentUser,
-            repostCount: serverResponse.repostCount,
-          })),
+          patchFeedPost(old, post.id, () => serverResponse),
       );
-    },
-
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["feed"] });
     },
   });
 }
@@ -129,7 +153,12 @@ export function useToggleRepost() {
 export function useToggleFavorite() {
   const queryClient = useQueryClient();
 
-  return useMutation<PostResponse, Error, PostResponse>({
+  return useMutation<
+    PostResponse,
+    Error,
+    PostResponse,
+    { feedSnapshot: unknown; favoritesSnapshot: unknown }
+  >({
     mutationFn: (post) =>
       post.favoritedByCurrentUser
         ? unfavoritePost(post.id)
@@ -138,7 +167,9 @@ export function useToggleFavorite() {
     onMutate: async (post) => {
       await queryClient.cancelQueries({ queryKey: ["feed"] });
       await queryClient.cancelQueries({ queryKey: ["my-favorites"] });
-      const snapshot = queryClient.getQueryData(["feed"]);
+
+      const feedSnapshot = queryClient.getQueryData(["feed"]);
+      const favoritesSnapshot = queryClient.getQueryData(["my-favorites"]);
 
       queryClient.setQueryData<InfiniteData<Page<PostResponse>>>(
         ["feed"],
@@ -149,12 +180,28 @@ export function useToggleFavorite() {
           })),
       );
 
-      return { snapshot };
+      if (post.favoritedByCurrentUser) {
+        queryClient.setQueryData<InfiniteData<Page<PostResponse>>>(
+          ["my-favorites"],
+          (old) => removeFavoritesPost(old, post.id),
+        );
+      } else {
+        queryClient.setQueryData<InfiniteData<Page<PostResponse>>>(
+          ["my-favorites"],
+          (old) =>
+            addFavoritesPost(old, { ...post, favoritedByCurrentUser: true }),
+        );
+      }
+
+      return { feedSnapshot, favoritesSnapshot };
     },
 
     onError: (_err, _post, ctx) => {
-      if (ctx?.snapshot) {
-        queryClient.setQueryData(["feed"], ctx.snapshot);
+      if (ctx?.feedSnapshot) {
+        queryClient.setQueryData(["feed"], ctx.feedSnapshot);
+      }
+      if (ctx?.favoritesSnapshot) {
+        queryClient.setQueryData(["my-favorites"], ctx.favoritesSnapshot);
       }
     },
 
@@ -162,16 +209,20 @@ export function useToggleFavorite() {
       queryClient.setQueryData<InfiniteData<Page<PostResponse>>>(
         ["feed"],
         (old) =>
-          patchFeedPost(old, post.id, (p) => ({
-            ...p,
-            favoritedByCurrentUser: serverResponse.favoritedByCurrentUser,
-          })),
+          patchFeedPost(old, post.id, () => serverResponse),
       );
-    },
 
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["feed"] });
-      queryClient.invalidateQueries({ queryKey: ["my-favorites"] });
+      if (serverResponse.favoritedByCurrentUser) {
+        queryClient.setQueryData<InfiniteData<Page<PostResponse>>>(
+          ["my-favorites"],
+          (old) => addFavoritesPost(old, serverResponse),
+        );
+      } else {
+        queryClient.setQueryData<InfiniteData<Page<PostResponse>>>(
+          ["my-favorites"],
+          (old) => removeFavoritesPost(old, post.id),
+        );
+      }
     },
   });
 }
