@@ -44,6 +44,7 @@ export type AuthorRef = {
   username: string;
   displayName: string | null;
   profilePictureUrl: string | null;
+  followedByCurrentUser: boolean;
 };
 
 export type PostResponse = {

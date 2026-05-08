@@ -88,7 +88,7 @@ export default function CreatorProfileScreen() {
           <Pressable
             style={[styles.followBtn, isFollowing && styles.followingBtn]}
             onPress={() =>
-              toggleFollow.mutate({ userId: numericId, currentlyFollowing: isFollowing })
+              toggleFollow.mutate({ targetUserId: numericId, currentlyFollowing: isFollowing })
             }
             disabled={toggleFollow.isPending}
           >

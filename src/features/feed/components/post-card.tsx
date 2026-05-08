@@ -1,14 +1,9 @@
-import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useAuth } from "@/src/auth/auth-context";
 import { PostResponse } from "@/src/api/types";
 import { useToggleFollow } from "@/src/features/follows/hooks/use-follow-mutations";
-
-// TODO F1d: feed posts don't include followedByCurrentUser on the author DTO.
-// The Follow button's state is local-only and resets on feed reload.
-// Fix: add followedByCurrentUser to the backend's AuthorRef in F1d.
 
 const LIKE_ACTIVE = "#F91880";
 const REPOST_ACTIVE = "#00BA7C";
@@ -51,14 +46,13 @@ export function PostCard({
   const authorInitial = authorDisplayName.charAt(0).toUpperCase();
   const isOwnPost = user?.id === post.author.id;
 
-  const [following, setFollowing] = useState(false);
   const toggleFollow = useToggleFollow();
 
   const handleFollow = () => {
-    toggleFollow.mutate(
-      { userId: post.author.id, currentlyFollowing: following },
-      { onSuccess: () => setFollowing((f) => !f) },
-    );
+    toggleFollow.mutate({
+      targetUserId: post.author.id,
+      currentlyFollowing: post.author.followedByCurrentUser,
+    });
   };
 
   return (
@@ -79,12 +73,12 @@ export function PostCard({
 
             {!isOwnPost && user ? (
               <Pressable
-                style={[styles.followBtn, following && styles.followingBtn]}
+                style={[styles.followBtn, post.author.followedByCurrentUser && styles.followingBtn]}
                 onPress={handleFollow}
                 disabled={toggleFollow.isPending}
               >
-                <Text style={[styles.followBtnText, following && styles.followingBtnText]}>
-                  {following ? "Following" : "Follow"}
+                <Text style={[styles.followBtnText, post.author.followedByCurrentUser && styles.followingBtnText]}>
+                  {post.author.followedByCurrentUser ? "Following" : "Follow"}
                 </Text>
               </Pressable>
             ) : null}

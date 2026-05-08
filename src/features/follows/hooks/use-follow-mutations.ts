@@ -1,29 +1,98 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { InfiniteData, useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { followUser, unfollowUser } from "@/src/api/follows";
-import { FollowResponse, PublicUserProfileResponse } from "@/src/api/types";
+import { FollowResponse, Page, PostResponse, PublicUserProfileResponse, CommentResponse } from "@/src/api/types";
 
-type ToggleFollowVars = { userId: number; currentlyFollowing: boolean };
-type ToggleFollowContext = { userSnapshot: unknown };
+type ToggleFollowVars = { targetUserId: number; currentlyFollowing: boolean };
+type ToggleFollowContext = {
+  feedSnapshot: unknown;
+  favoritesSnapshot: unknown;
+  userSnapshot: unknown;
+  meSnapshot: unknown;
+  commentsSnapshots: Map<string, unknown>;
+};
 
 export function useToggleFollow() {
   const queryClient = useQueryClient();
 
   return useMutation<FollowResponse, Error, ToggleFollowVars, ToggleFollowContext>({
-    mutationFn: ({ userId, currentlyFollowing }) =>
-      currentlyFollowing ? unfollowUser(userId) : followUser(userId),
+    mutationFn: ({ targetUserId, currentlyFollowing }) =>
+      currentlyFollowing ? unfollowUser(targetUserId) : followUser(targetUserId),
 
-    onMutate: async ({ userId, currentlyFollowing }) => {
-      await queryClient.cancelQueries({ queryKey: ["user", userId] });
-      const userSnapshot = queryClient.getQueryData(["user", userId]);
+    onMutate: async ({ targetUserId, currentlyFollowing }) => {
+      await queryClient.cancelQueries({ queryKey: ["feed"] });
+      await queryClient.cancelQueries({ queryKey: ["my-favorites"] });
+      await queryClient.cancelQueries({ queryKey: ["user", targetUserId] });
+      await queryClient.cancelQueries({ queryKey: ["me"] });
+      await queryClient.cancelQueries({ queryKey: ["user-posts"] });
+      await queryClient.cancelQueries({ queryKey: ["comments"] });
+      await queryClient.cancelQueries({ queryKey: ["post"] });
+
+      const feedSnapshot = queryClient.getQueryData(["feed"]);
+      const favoritesSnapshot = queryClient.getQueryData(["my-favorites"]);
+      const userSnapshot = queryClient.getQueryData(["user", targetUserId]);
+      const meSnapshot = queryClient.getQueryData(["me"]);
+      const commentsSnapshots = new Map<string, unknown>();
+
+      const newFollowState = !currentlyFollowing;
+
+      const patchPostsInCache = (
+        old: InfiniteData<Page<PostResponse>> | undefined,
+      ): InfiniteData<Page<PostResponse>> | undefined => {
+        if (!old) return old;
+        return {
+          ...old,
+          pages: old.pages.map((page) => ({
+            ...page,
+            content: page.content.map((post) =>
+              post.author.id === targetUserId
+                ? { ...post, author: { ...post.author, followedByCurrentUser: newFollowState } }
+                : post,
+            ),
+          })),
+        };
+      };
+
+      queryClient.setQueryData(["feed"], patchPostsInCache);
+      queryClient.setQueryData(["my-favorites"], patchPostsInCache);
+
+      const postQueriesData = queryClient.getQueriesData({ queryKey: ["post"] });
+      for (const [queryKey, data] of postQueriesData) {
+        queryClient.setQueryData<PostResponse>(queryKey, (old) => {
+          if (!old || old.author.id !== targetUserId) return old;
+          return {
+            ...old,
+            author: { ...old.author, followedByCurrentUser: newFollowState },
+          };
+        });
+      }
+
+      const commentQueriesData = queryClient.getQueriesData({ queryKey: ["comments"] });
+      for (const [queryKey, data] of commentQueriesData) {
+        commentsSnapshots.set(JSON.stringify(queryKey), data);
+        queryClient.setQueryData<InfiniteData<Page<CommentResponse>>>(queryKey, (old) => {
+          if (!old) return old;
+          return {
+            ...old,
+            pages: old.pages.map((page) => ({
+              ...page,
+              content: page.content.map((comment) =>
+                comment.author.id === targetUserId
+                  ? { ...comment, author: { ...comment.author, followedByCurrentUser: newFollowState } }
+                  : comment,
+              ),
+            })),
+          };
+        });
+      }
 
       queryClient.setQueryData<PublicUserProfileResponse>(
-        ["user", userId],
+        ["user", targetUserId],
         (old) =>
           old
             ? {
                 ...old,
-                followedByCurrentUser: !currentlyFollowing,
+                followedByCurrentUser: newFollowState,
                 followerCount: currentlyFollowing
                   ? old.followerCount - 1
                   : old.followerCount + 1,
@@ -31,12 +100,27 @@ export function useToggleFollow() {
             : old,
       );
 
-      return { userSnapshot };
+      return { feedSnapshot, favoritesSnapshot, userSnapshot, meSnapshot, commentsSnapshots };
     },
 
-    onError: (_err, { userId }, ctx) => {
+    onError: (_err, { targetUserId }, ctx) => {
+      if (ctx?.feedSnapshot !== undefined) {
+        queryClient.setQueryData(["feed"], ctx.feedSnapshot);
+      }
+      if (ctx?.favoritesSnapshot !== undefined) {
+        queryClient.setQueryData(["my-favorites"], ctx.favoritesSnapshot);
+      }
       if (ctx?.userSnapshot !== undefined) {
-        queryClient.setQueryData(["user", userId], ctx.userSnapshot);
+        queryClient.setQueryData(["user", targetUserId], ctx.userSnapshot);
+      }
+      if (ctx?.meSnapshot !== undefined) {
+        queryClient.setQueryData(["me"], ctx.meSnapshot);
+      }
+      if (ctx?.commentsSnapshots) {
+        for (const [queryKeyStr, snapshot] of ctx.commentsSnapshots) {
+          const queryKey = JSON.parse(queryKeyStr);
+          queryClient.setQueryData(queryKey, snapshot);
+        }
       }
     },
 
