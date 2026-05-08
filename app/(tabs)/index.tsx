@@ -1,7 +1,8 @@
 import { useRouter } from "expo-router";
-import { ActivityIndicator, FlatList, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 
 import { AppLogo } from "@/components/app-logo";
+import { IconSymbol } from "@/components/ui/icon-symbol";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { useAuth } from "@/src/auth/auth-context";
@@ -37,6 +38,9 @@ export default function HomeScreen() {
       <View style={styles.header}>
         <AppLogo size={28} />
         <Text style={styles.headerTitle}>Koinonia</Text>
+        <Pressable style={styles.notificationBtn} onPress={() => {}}>
+          <IconSymbol size={24} name="bell" color="#E7E9EA" />
+        </Pressable>
         {isGuest ? <Text style={styles.guestBadge}>Guest</Text> : null}
       </View>
 
@@ -108,6 +112,9 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "800",
     flex: 1,
+  },
+  notificationBtn: {
+    padding: 8,
   },
   guestBadge: {
     color: "#71767B",
