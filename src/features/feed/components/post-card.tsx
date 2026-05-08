@@ -7,6 +7,7 @@ import { useToggleFollow } from "@/src/features/follows/hooks/use-follow-mutatio
 
 const LIKE_ACTIVE = "#F91880";
 const REPOST_ACTIVE = "#00BA7C";
+const FAVORITE_ACTIVE = "#1D9BF0";
 const MUTED = "#71767B";
 const TEXT = "#E7E9EA";
 const BORDER = "#2F3336";
@@ -127,7 +128,11 @@ export function PostCard({
               style={styles.action}
               disabled={!canFavorite || !onToggleFavorite}
             >
-              <IconSymbol size={18} name="bookmark" color={MUTED} />
+              <IconSymbol
+                size={18}
+                name={post.favoritedByCurrentUser ? "bookmark.fill" : "bookmark"}
+                color={post.favoritedByCurrentUser ? FAVORITE_ACTIVE : MUTED}
+              />
             </Pressable>
           </View>
         </View>
