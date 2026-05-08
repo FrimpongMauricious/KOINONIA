@@ -39,7 +39,7 @@ export default function HomeScreen() {
         <AppLogo size={28} />
         <Text style={styles.headerTitle}>Koinonia</Text>
         <Pressable style={styles.notificationBtn} onPress={() => {}}>
-          <IconSymbol size={24} name="bell" color="#E7E9EA" />
+          <IconSymbol size={26} name="bell.fill" color="#E7E9EA" />
         </Pressable>
         {isGuest ? <Text style={styles.guestBadge}>Guest</Text> : null}
       </View>
@@ -115,6 +115,7 @@ const styles = StyleSheet.create({
   },
   notificationBtn: {
     padding: 8,
+    marginRight: 4,
   },
   guestBadge: {
     color: "#71767B",
