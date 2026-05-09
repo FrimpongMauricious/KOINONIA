@@ -1,5 +1,5 @@
-import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { formatCount } from "@/src/utils/format";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
@@ -126,7 +126,9 @@ export function PostCard({
             <View style={styles.actionsRow}>
               <Pressable onPress={onAddComment} style={styles.action}>
                 <IconSymbol size={18} name="bubble.left" color={MUTED} />
-                <Text style={styles.actionCount}>{formatCount(post.commentCount)}</Text>
+                <Text style={styles.actionCount}>
+                  {formatCount(post.commentCount)}
+                </Text>
               </Pressable>
 
               <Pressable
@@ -184,8 +186,14 @@ export function PostCard({
               </Pressable>
 
               <View style={styles.action}>
-                <MaterialCommunityIcons name="eye-outline" size={18} color={MUTED} />
-                <Text style={styles.actionCount}>{formatCount(post.viewCount ?? 0)}</Text>
+                <MaterialCommunityIcons
+                  name="eye-outline"
+                  size={18}
+                  color={MUTED}
+                />
+                <Text style={styles.actionCount}>
+                  {formatCount(post.viewCount ?? 0)}
+                </Text>
               </View>
             </View>
           </View>

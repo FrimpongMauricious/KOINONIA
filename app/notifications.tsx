@@ -1,20 +1,23 @@
-import { useEffect } from "react";
-import { useRouter } from "expo-router";
 import { Image } from "expo-image";
+import { useRouter } from "expo-router";
+import { useEffect } from "react";
 import {
-  ActivityIndicator,
-  FlatList,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
+    ActivityIndicator,
+    FlatList,
+    Pressable,
+    StyleSheet,
+    Text,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { ThemedView } from "@/components/themed-view";
 import { NotificationResponse } from "@/src/api/types";
 import { useAuth } from "@/src/auth/auth-context";
-import { useMarkAllRead, useMarkRead } from "@/src/features/notifications/hooks/use-mark-read";
+import {
+    useMarkAllRead,
+    useMarkRead,
+} from "@/src/features/notifications/hooks/use-mark-read";
 import { useNotifications } from "@/src/features/notifications/hooks/use-notifications";
 
 function formatRelativeTime(iso: string): string {
@@ -33,7 +36,8 @@ function formatRelativeTime(iso: string): string {
 }
 
 function buildActionText(notification: NotificationResponse): string {
-  const actorName = notification.actor.displayName ?? notification.actor.username;
+  const actorName =
+    notification.actor.displayName ?? notification.actor.username;
 
   switch (notification.type) {
     case "LIKE":
@@ -57,7 +61,8 @@ function NotificationRow({
   onOpen: (notification: NotificationResponse) => void;
 }) {
   const markReadMutation = useMarkRead(notification.id);
-  const actorName = notification.actor.displayName ?? notification.actor.username;
+  const actorName =
+    notification.actor.displayName ?? notification.actor.username;
   const avatarInitial = actorName.charAt(0).toUpperCase();
 
   const handlePress = () => {
@@ -147,7 +152,11 @@ export default function InboxScreen() {
         </View>
 
         {isLoading ? (
-          <ActivityIndicator style={styles.loader} size="large" color="#1D9BF0" />
+          <ActivityIndicator
+            style={styles.loader}
+            size="large"
+            color="#1D9BF0"
+          />
         ) : null}
 
         <FlatList

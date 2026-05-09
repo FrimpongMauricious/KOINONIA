@@ -1,18 +1,24 @@
 import { useRouter } from "expo-router";
-import { ActivityIndicator, FlatList, StyleSheet, Text, View } from "react-native";
+import {
+    ActivityIndicator,
+    FlatList,
+    StyleSheet,
+    Text,
+    View,
+} from "react-native";
 
-import { SafeAreaView } from "react-native-safe-area-context";
+import { NotificationBell } from "@/components/notification-bell";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
-import { NotificationBell } from "@/components/notification-bell";
 import { useAuth } from "@/src/auth/auth-context";
 import { PostCard } from "@/src/features/feed/components/post-card";
 import { useFeed } from "@/src/features/feed/hooks/use-feed";
 import {
-  useToggleFavorite,
-  useToggleLike,
-  useToggleRepost,
+    useToggleFavorite,
+    useToggleLike,
+    useToggleRepost,
 } from "@/src/features/feed/hooks/use-post-mutations";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function HomeScreen() {
   const router = useRouter();

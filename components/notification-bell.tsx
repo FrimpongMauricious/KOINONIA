@@ -1,11 +1,11 @@
-import React from "react";
-import { View, Text, Pressable, StyleSheet } from "react-native";
-import { useRouter } from "expo-router";
+import { Colors } from "@/constants/theme";
+import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useAuth } from "@/src/auth/auth-context";
 import { useUnreadCount } from "@/src/features/notifications/hooks/use-unread-count";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
-import { useColorScheme } from "@/hooks/use-color-scheme";
-import { Colors } from "@/constants/theme";
+import { useRouter } from "expo-router";
+import React from "react";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 export function NotificationBell({ size = 23 }: { size?: number }) {
   const router = useRouter();

@@ -13,12 +13,18 @@ export function formatCount(n: number): string {
   if (n < 1000) return String(n);
   if (n < 1_000_000) {
     const k = n / 1000;
-    return k >= 100 ? `${Math.floor(k)}K` : `${k.toFixed(1).replace(/\.0$/, "")}K`;
+    return k >= 100
+      ? `${Math.floor(k)}K`
+      : `${k.toFixed(1).replace(/\.0$/, "")}K`;
   }
   if (n < 1_000_000_000) {
     const m = n / 1_000_000;
-    return m >= 100 ? `${Math.floor(m)}M` : `${m.toFixed(1).replace(/\.0$/, "")}M`;
+    return m >= 100
+      ? `${Math.floor(m)}M`
+      : `${m.toFixed(1).replace(/\.0$/, "")}M`;
   }
   const b = n / 1_000_000_000;
-  return b >= 100 ? `${Math.floor(b)}B` : `${b.toFixed(1).replace(/\.0$/, "")}B`;
+  return b >= 100
+    ? `${Math.floor(b)}B`
+    : `${b.toFixed(1).replace(/\.0$/, "")}B`;
 }

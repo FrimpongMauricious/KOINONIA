@@ -1,31 +1,31 @@
-import { useState } from "react";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { useState } from "react";
 import {
-  ActivityIndicator,
-  FlatList,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
+    ActivityIndicator,
+    FlatList,
+    Pressable,
+    StyleSheet,
+    Text,
+    View,
 } from "react-native";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
-import { formatCount } from "@/src/utils/format";
 import { fetchUserPosts } from "@/src/api/users";
 import { useAuth } from "@/src/auth/auth-context";
-import { PostCard } from "@/src/features/feed/components/post-card";
 import { PostAuthorMenu } from "@/src/features/feed/components/post-author-menu";
+import { PostCard } from "@/src/features/feed/components/post-card";
 import {
-  useToggleFavorite,
-  useToggleLike,
-  useToggleRepost,
+    useToggleFavorite,
+    useToggleLike,
+    useToggleRepost,
 } from "@/src/features/feed/hooks/use-post-mutations";
 import { useToggleFollow } from "@/src/features/follows/hooks/use-follow-mutations";
 import { useUserProfile } from "@/src/features/profile/hooks/use-user-profile";
+import { formatCount } from "@/src/utils/format";
 
 const BANNER_HEIGHT = 130;
 const AVATAR_SIZE = 76;
@@ -133,15 +133,21 @@ export default function CreatorProfileScreen() {
         {/* Stats row: bold numbers + muted labels */}
         <View style={styles.statsRow}>
           <View style={styles.statItem}>
-            <Text style={styles.statNumber}>{formatCount(profile.followingCount)}</Text>
+            <Text style={styles.statNumber}>
+              {formatCount(profile.followingCount)}
+            </Text>
             <Text style={styles.statLabel}> Following</Text>
           </View>
           <View style={[styles.statItem, { marginLeft: 18 }]}>
-            <Text style={styles.statNumber}>{formatCount(profile.followerCount)}</Text>
+            <Text style={styles.statNumber}>
+              {formatCount(profile.followerCount)}
+            </Text>
             <Text style={styles.statLabel}> Followers</Text>
           </View>
           <View style={[styles.statItem, { marginLeft: 18 }]}>
-            <Text style={styles.statNumber}>{formatCount(profile.totalLikes ?? 0)}</Text>
+            <Text style={styles.statNumber}>
+              {formatCount(profile.totalLikes ?? 0)}
+            </Text>
             <Text style={styles.statLabel}> Likes</Text>
           </View>
         </View>
