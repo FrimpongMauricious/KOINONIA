@@ -2,11 +2,11 @@ import { DarkTheme, ThemeProvider } from "@react-navigation/native";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import * as SystemUI from "expo-system-ui";
 import { useEffect } from "react";
 import { ActivityIndicator, View } from "react-native";
 import "react-native-reanimated";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import * as SystemUI from "expo-system-ui";
 
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { AuthProvider, useAuth } from "@/src/auth/auth-context";
@@ -49,19 +49,16 @@ function RootLayoutInner() {
 
   return (
     <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-        <Stack.Screen name="post/[id]" options={{ title: "Post" }} />
-        <Stack.Screen name="user/[id]" options={{ title: "Creator" }} />
-        <Stack.Screen
-          name="edit-profile"
-          options={{ title: "Edit Profile" }}
-        />
-        <Stack.Screen
-          name="modal"
-          options={{ presentation: "modal", title: "Info" }}
-        />
-      </Stack>
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+      <Stack.Screen name="post/[id]" options={{ title: "Post" }} />
+      <Stack.Screen name="user/[id]" options={{ title: "Creator" }} />
+      <Stack.Screen name="edit-profile" options={{ title: "Edit Profile" }} />
+      <Stack.Screen
+        name="modal"
+        options={{ presentation: "modal", title: "Info" }}
+      />
+    </Stack>
   );
 }
 
