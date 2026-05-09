@@ -4,6 +4,8 @@ import { useRouter } from "expo-router";
 import { useAuth } from "@/src/auth/auth-context";
 import { useUnreadCount } from "@/src/features/notifications/hooks/use-unread-count";
 import { IconSymbol } from "@/components/ui/icon-symbol";
+import { useColorScheme } from "@/hooks/use-color-scheme";
+import { Colors } from "@/constants/theme";
 
 export function NotificationBell({ size = 26 }: { size?: number }) {
   const router = useRouter();
@@ -11,6 +13,8 @@ export function NotificationBell({ size = 26 }: { size?: number }) {
   const { count } = useUnreadCount(status === "authenticated");
 
   const badgeLabel = count > 9 ? "9+" : String(count);
+  const colorScheme = useColorScheme();
+  const palette = Colors[colorScheme ?? "light"];
 
   return (
     <Pressable
@@ -22,7 +26,7 @@ export function NotificationBell({ size = 26 }: { size?: number }) {
       <View style={styles.iconWrap}>
         <IconSymbol size={size} name="bell.fill" color="#E7E9EA" />
         {count > 0 ? (
-          <View style={styles.badge}>
+          <View style={[styles.badge, { backgroundColor: palette.tint }]}>
             <Text style={styles.badgeText}>{badgeLabel}</Text>
           </View>
         ) : null}
