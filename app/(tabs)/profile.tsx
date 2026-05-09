@@ -2,15 +2,16 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { Link, useRouter } from "expo-router";
 import { useState } from "react";
 import {
-    ActivityIndicator,
-    FlatList,
-    Modal,
-    Pressable,
-    StyleSheet,
-    Text,
-    TextInput,
-    View,
+  ActivityIndicator,
+  FlatList,
+  Modal,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
 } from "react-native";
+import { formatCount } from "@/src/utils/format";
 
 import { AppLogo } from "@/components/app-logo";
 import { ThemedView } from "@/components/themed-view";
@@ -122,12 +123,16 @@ export default function ProfileScreen() {
         {/* Stats row: bold numbers + muted labels */}
         <View style={styles.statsRow}>
           <Pressable style={styles.statItem}>
-            <Text style={styles.statNumber}>{user?.followingCount ?? 0}</Text>
+            <Text style={styles.statNumber}>{formatCount(user?.followingCount ?? 0)}</Text>
             <Text style={styles.statLabel}> Following</Text>
           </Pressable>
           <Pressable style={[styles.statItem, { marginLeft: 18 }]}>
-            <Text style={styles.statNumber}>{user?.followerCount ?? 0}</Text>
+            <Text style={styles.statNumber}>{formatCount(user?.followerCount ?? 0)}</Text>
             <Text style={styles.statLabel}> Followers</Text>
+          </Pressable>
+          <Pressable style={[styles.statItem, { marginLeft: 18 }]}>
+            <Text style={styles.statNumber}>{formatCount(user?.totalLikes ?? 0)}</Text>
+            <Text style={styles.statLabel}> Likes</Text>
           </Pressable>
         </View>
 

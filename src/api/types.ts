@@ -12,6 +12,7 @@ export type UserProfileResponse = UserResponse & {
   followerCount: number;
   followingCount: number;
   followedByCurrentUser: boolean;
+  totalLikes: number;
 };
 
 export type AuthResponse = {
@@ -56,6 +57,7 @@ export type PostResponse = {
   likeCount: number;
   commentCount: number;
   repostCount: number;
+  viewCount: number;
   likedByCurrentUser: boolean;
   repostedByCurrentUser: boolean;
   favoritedByCurrentUser: boolean;
@@ -89,6 +91,7 @@ export type PublicUserProfileResponse = {
   followerCount: number;
   followingCount: number;
   followedByCurrentUser: boolean;
+  totalLikes: number;
 };
 
 export type CommentResponse = {

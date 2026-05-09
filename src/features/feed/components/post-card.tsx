@@ -1,4 +1,5 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { formatCount } from "@/src/utils/format";
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
@@ -125,7 +126,7 @@ export function PostCard({
             <View style={styles.actionsRow}>
               <Pressable onPress={onAddComment} style={styles.action}>
                 <IconSymbol size={18} name="bubble.left" color={MUTED} />
-                <Text style={styles.actionCount}>{post.commentCount}</Text>
+                <Text style={styles.actionCount}>{formatCount(post.commentCount)}</Text>
               </Pressable>
 
               <Pressable
@@ -144,7 +145,7 @@ export function PostCard({
                     isReshared && { color: REPOST_ACTIVE },
                   ]}
                 >
-                  {post.repostCount}
+                  {formatCount(post.repostCount)}
                 </Text>
               </Pressable>
 
@@ -164,7 +165,7 @@ export function PostCard({
                     isLiked && { color: LIKE_ACTIVE },
                   ]}
                 >
-                  {post.likeCount}
+                  {formatCount(post.likeCount)}
                 </Text>
               </Pressable>
 
@@ -181,6 +182,11 @@ export function PostCard({
                   color={post.favoritedByCurrentUser ? FAVORITE_ACTIVE : MUTED}
                 />
               </Pressable>
+
+              <View style={styles.action}>
+                <MaterialCommunityIcons name="eye-outline" size={18} color={MUTED} />
+                <Text style={styles.actionCount}>{formatCount(post.viewCount ?? 0)}</Text>
+              </View>
             </View>
           </View>
         </View>

@@ -14,6 +14,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
+import { formatCount } from "@/src/utils/format";
 import { fetchUserPosts } from "@/src/api/users";
 import { useAuth } from "@/src/auth/auth-context";
 import { PostCard } from "@/src/features/feed/components/post-card";
@@ -132,12 +133,16 @@ export default function CreatorProfileScreen() {
         {/* Stats row: bold numbers + muted labels */}
         <View style={styles.statsRow}>
           <View style={styles.statItem}>
-            <Text style={styles.statNumber}>{profile.followingCount}</Text>
+            <Text style={styles.statNumber}>{formatCount(profile.followingCount)}</Text>
             <Text style={styles.statLabel}> Following</Text>
           </View>
           <View style={[styles.statItem, { marginLeft: 18 }]}>
-            <Text style={styles.statNumber}>{profile.followerCount}</Text>
+            <Text style={styles.statNumber}>{formatCount(profile.followerCount)}</Text>
             <Text style={styles.statLabel}> Followers</Text>
+          </View>
+          <View style={[styles.statItem, { marginLeft: 18 }]}>
+            <Text style={styles.statNumber}>{formatCount(profile.totalLikes ?? 0)}</Text>
+            <Text style={styles.statLabel}> Likes</Text>
           </View>
         </View>
       </View>
