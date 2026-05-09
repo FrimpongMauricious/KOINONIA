@@ -31,7 +31,7 @@ const AVATAR_SIZE = 76;
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { user, status, logout } = useAuth();
+  const { user, status, logout, refreshUser } = useAuth();
   const isGuest = status !== "authenticated";
 
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
@@ -39,6 +39,7 @@ export default function ProfileScreen() {
   const [showDeletePassword, setShowDeletePassword] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const postsQuery = useInfiniteQuery({
     queryKey: ["user-posts", user?.id ?? 0],
@@ -54,6 +55,15 @@ export default function ProfileScreen() {
   const toggleLike = useToggleLike();
   const toggleRepost = useToggleRepost();
   const toggleFavorite = useToggleFavorite();
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await Promise.all([postsQuery.refetch(), refreshUser()]);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   const handleDeleteAccount = async () => {
     setDeleteLoading(true);
@@ -174,6 +184,8 @@ export default function ProfileScreen() {
           ListHeaderComponent={() => profileHeader}
           contentContainerStyle={{ paddingBottom: 24 }}
           showsVerticalScrollIndicator={false}
+          refreshing={isRefreshing}
+          onRefresh={handleRefresh}
           onEndReached={() => {
             if (postsQuery.hasNextPage) postsQuery.fetchNextPage();
           }}
