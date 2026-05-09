@@ -24,7 +24,7 @@ export function NotificationBell({ size = 26 }: { size?: number }) {
       accessibilityLabel={"Open notifications"}
     >
       <View style={styles.iconWrap}>
-        <IconSymbol size={size} name="bell.fill" color="#E7E9EA" />
+        <IconSymbol size={size} name="bell.slash.fill" color="#E7E9EA" />
         {count > 0 ? (
           <View style={[styles.badge, { backgroundColor: palette.tint }]}>
             <Text style={styles.badgeText}>{badgeLabel}</Text>
