@@ -1,18 +1,21 @@
 import { StyleSheet, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 
 export default function DiscoverScreen() {
   return (
-    <ThemedView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Discover</Text>
-      </View>
-      <ThemedText style={styles.placeholder}>
-        User search coming in the next update.
-      </ThemedText>
-    </ThemedView>
+    <SafeAreaView style={styles.container} edges={["top"]}>
+      <ThemedView style={styles.container}>
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>Discover</Text>
+        </View>
+        <ThemedText style={styles.placeholder}>
+          User search coming in the next update.
+        </ThemedText>
+      </ThemedView>
+    </SafeAreaView>
   );
 }
 

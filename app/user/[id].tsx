@@ -2,14 +2,15 @@ import { useState } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import {
-    ActivityIndicator,
-    FlatList,
-    Pressable,
-    StyleSheet,
-    Text,
-    View,
+  ActivityIndicator,
+  FlatList,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
@@ -18,9 +19,9 @@ import { useAuth } from "@/src/auth/auth-context";
 import { PostCard } from "@/src/features/feed/components/post-card";
 import { PostAuthorMenu } from "@/src/features/feed/components/post-author-menu";
 import {
-    useToggleFavorite,
-    useToggleLike,
-    useToggleRepost,
+  useToggleFavorite,
+  useToggleLike,
+  useToggleRepost,
 } from "@/src/features/feed/hooks/use-post-mutations";
 import { useToggleFollow } from "@/src/features/follows/hooks/use-follow-mutations";
 import { useUserProfile } from "@/src/features/profile/hooks/use-user-profile";
@@ -151,66 +152,70 @@ export default function CreatorProfileScreen() {
   );
 
   return (
-    <ThemedView style={styles.root}>
-      <FlatList
-        data={posts}
-        keyExtractor={(item) => item.id.toString()}
-        ListHeaderComponent={() => profileHeader}
-        contentContainerStyle={{ paddingBottom: 24 }}
-        showsVerticalScrollIndicator={false}
-        onEndReached={() => {
-          if (postsQuery.hasNextPage) postsQuery.fetchNextPage();
-        }}
-        onEndReachedThreshold={0.5}
-        ListEmptyComponent={
-          postsQuery.isLoading ? (
-            <ActivityIndicator style={styles.centerSpinner} color="#1D9BF0" />
-          ) : (
-            <Text style={styles.emptyText}>This creator has no posts yet.</Text>
-          )
-        }
-        ListFooterComponent={
-          postsQuery.isFetchingNextPage ? (
-            <ActivityIndicator
-              style={{ paddingVertical: 16 }}
-              color="#1D9BF0"
+    <SafeAreaView style={styles.root} edges={["top"]}>
+      <ThemedView style={styles.root}>
+        <FlatList
+          data={posts}
+          keyExtractor={(item) => item.id.toString()}
+          ListHeaderComponent={() => profileHeader}
+          contentContainerStyle={{ paddingBottom: 24 }}
+          showsVerticalScrollIndicator={false}
+          onEndReached={() => {
+            if (postsQuery.hasNextPage) postsQuery.fetchNextPage();
+          }}
+          onEndReachedThreshold={0.5}
+          ListEmptyComponent={
+            postsQuery.isLoading ? (
+              <ActivityIndicator style={styles.centerSpinner} color="#1D9BF0" />
+            ) : (
+              <Text style={styles.emptyText}>
+                This creator has no posts yet.
+              </Text>
+            )
+          }
+          ListFooterComponent={
+            postsQuery.isFetchingNextPage ? (
+              <ActivityIndicator
+                style={{ paddingVertical: 16 }}
+                color="#1D9BF0"
+              />
+            ) : null
+          }
+          renderItem={({ item }) => (
+            <PostCard
+              post={item}
+              canLike={!isGuest}
+              canRepost={!isGuest}
+              canFavorite={!isGuest}
+              onOpenAuthor={() =>
+                router.push({
+                  pathname: "/user/[id]",
+                  params: { id: item.author.id.toString() },
+                })
+              }
+              onToggleLike={() => toggleLike.mutate(item)}
+              onAddComment={() => router.push(`/post/${item.id}`)}
+              onToggleRepost={() => toggleRepost.mutate(item)}
+              onToggleFavorite={() => toggleFavorite.mutate(item)}
+              onOpen={() => router.push(`/post/${item.id}`)}
             />
-          ) : null
-        }
-        renderItem={({ item }) => (
-          <PostCard
-            post={item}
-            canLike={!isGuest}
-            canRepost={!isGuest}
-            canFavorite={!isGuest}
-            onOpenAuthor={() =>
-              router.push({
-                pathname: "/user/[id]",
-                params: { id: item.author.id.toString() },
-              })
-            }
-            onToggleLike={() => toggleLike.mutate(item)}
-            onAddComment={() => router.push(`/post/${item.id}`)}
-            onToggleRepost={() => toggleRepost.mutate(item)}
-            onToggleFavorite={() => toggleFavorite.mutate(item)}
-            onOpen={() => router.push(`/post/${item.id}`)}
-          />
-        )}
-      />
+          )}
+        />
 
-      <PostAuthorMenu
-        visible={menuVisible}
-        authorUsername={profile.username}
-        onUnfollow={() => {
-          toggleFollow.mutate({
-            targetUserId: numericId,
-            currentlyFollowing: isFollowing,
-          });
-          setMenuVisible(false);
-        }}
-        onClose={() => setMenuVisible(false)}
-      />
-    </ThemedView>
+        <PostAuthorMenu
+          visible={menuVisible}
+          authorUsername={profile.username}
+          onUnfollow={() => {
+            toggleFollow.mutate({
+              targetUserId: numericId,
+              currentlyFollowing: isFollowing,
+            });
+            setMenuVisible(false);
+          }}
+          onClose={() => setMenuVisible(false)}
+        />
+      </ThemedView>
+    </SafeAreaView>
   );
 }
 

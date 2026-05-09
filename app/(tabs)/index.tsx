@@ -1,14 +1,14 @@
 import { useRouter } from "expo-router";
 import {
-    ActivityIndicator,
-    FlatList,
-    Pressable,
-    StyleSheet,
-    Text,
-    View,
+  ActivityIndicator,
+  FlatList,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
 } from "react-native";
 
-import { AppLogo } from "@/components/app-logo";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { IconSymbol } from "@/components/ui/icon-symbol";
@@ -16,9 +16,9 @@ import { useAuth } from "@/src/auth/auth-context";
 import { PostCard } from "@/src/features/feed/components/post-card";
 import { useFeed } from "@/src/features/feed/hooks/use-feed";
 import {
-    useToggleFavorite,
-    useToggleLike,
-    useToggleRepost,
+  useToggleFavorite,
+  useToggleLike,
+  useToggleRepost,
 } from "@/src/features/feed/hooks/use-post-mutations";
 
 export default function HomeScreen() {
@@ -41,66 +41,74 @@ export default function HomeScreen() {
   const toggleFavorite = useToggleFavorite();
 
   return (
-    <ThemedView style={styles.container}>
-      <View style={styles.header}>
-        <AppLogo size={28} />
-        <Text style={styles.headerTitle}>Koinonia</Text>
-        <Pressable
-          style={styles.notificationBtn}
-          onPress={() => router.push("/notifications")}
-          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-        >
-          <IconSymbol size={26} name="bell.fill" color="#E7E9EA" />
-        </Pressable>
-        {isGuest ? <Text style={styles.guestBadge}>Guest</Text> : null}
-      </View>
+    <SafeAreaView style={styles.container} edges={["top"]}>
+      <ThemedView style={styles.container}>
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>Koinonia</Text>
+          <Pressable
+            style={styles.notificationBtn}
+            onPress={() => router.push("/notifications")}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <IconSymbol size={26} name="bell.fill" color="#E7E9EA" />
+          </Pressable>
+          {isGuest ? <Text style={styles.guestBadge}>Guest</Text> : null}
+        </View>
 
-      {isLoading ? (
-        <ActivityIndicator style={styles.loader} size="large" color="#1D9BF0" />
-      ) : (
-        <FlatList
-          data={posts}
-          keyExtractor={(item) => item.id.toString()}
-          contentContainerStyle={styles.list}
-          showsVerticalScrollIndicator={false}
-          refreshing={isRefetching}
-          onRefresh={refetch}
-          onEndReached={() => {
-            if (hasNextPage) fetchNextPage();
-          }}
-          onEndReachedThreshold={0.5}
-          ListEmptyComponent={
-            <ThemedText style={styles.emptyText}>
-              No posts yet — be the first to share something.
-            </ThemedText>
-          }
-          ListFooterComponent={
-            isFetchingNextPage ? (
-              <ActivityIndicator style={styles.footerSpinner} color="#1D9BF0" />
-            ) : null
-          }
-          renderItem={({ item }) => (
-            <PostCard
-              post={item}
-              canLike={!isGuest}
-              canRepost={!isGuest}
-              canFavorite={!isGuest}
-              onOpenAuthor={() =>
-                router.push({
-                  pathname: "/user/[id]",
-                  params: { id: item.author.id.toString() },
-                })
-              }
-              onToggleLike={() => toggleLike.mutate(item)}
-              onAddComment={() => router.push(`/post/${item.id}`)}
-              onToggleRepost={() => toggleRepost.mutate(item)}
-              onToggleFavorite={() => toggleFavorite.mutate(item)}
-              onOpen={() => router.push(`/post/${item.id}`)}
-            />
-          )}
-        />
-      )}
-    </ThemedView>
+        {isLoading ? (
+          <ActivityIndicator
+            style={styles.loader}
+            size="large"
+            color="#1D9BF0"
+          />
+        ) : (
+          <FlatList
+            data={posts}
+            keyExtractor={(item) => item.id.toString()}
+            contentContainerStyle={styles.list}
+            showsVerticalScrollIndicator={false}
+            refreshing={isRefetching}
+            onRefresh={refetch}
+            onEndReached={() => {
+              if (hasNextPage) fetchNextPage();
+            }}
+            onEndReachedThreshold={0.5}
+            ListEmptyComponent={
+              <ThemedText style={styles.emptyText}>
+                No posts yet — be the first to share something.
+              </ThemedText>
+            }
+            ListFooterComponent={
+              isFetchingNextPage ? (
+                <ActivityIndicator
+                  style={styles.footerSpinner}
+                  color="#1D9BF0"
+                />
+              ) : null
+            }
+            renderItem={({ item }) => (
+              <PostCard
+                post={item}
+                canLike={!isGuest}
+                canRepost={!isGuest}
+                canFavorite={!isGuest}
+                onOpenAuthor={() =>
+                  router.push({
+                    pathname: "/user/[id]",
+                    params: { id: item.author.id.toString() },
+                  })
+                }
+                onToggleLike={() => toggleLike.mutate(item)}
+                onAddComment={() => router.push(`/post/${item.id}`)}
+                onToggleRepost={() => toggleRepost.mutate(item)}
+                onToggleFavorite={() => toggleFavorite.mutate(item)}
+                onOpen={() => router.push(`/post/${item.id}`)}
+              />
+            )}
+          />
+        )}
+      </ThemedView>
+    </SafeAreaView>
   );
 }
 

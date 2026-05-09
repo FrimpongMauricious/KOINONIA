@@ -1,28 +1,29 @@
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { Link, useRouter } from "expo-router";
 import { useState } from "react";
 import {
-  ActivityIndicator,
-  FlatList,
-  Modal,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
+    ActivityIndicator,
+    FlatList,
+    Modal,
+    Pressable,
+    StyleSheet,
+    Text,
+    TextInput,
+    View,
 } from "react-native";
-import { useInfiniteQuery } from "@tanstack/react-query";
 
 import { AppLogo } from "@/components/app-logo";
-import { IconSymbol } from "@/components/ui/icon-symbol";
 import { ThemedView } from "@/components/themed-view";
-import { PostCard } from "@/src/features/feed/components/post-card";
-import { useAuth } from "@/src/auth/auth-context";
+import { IconSymbol } from "@/components/ui/icon-symbol";
 import { deleteMyAccount, fetchUserPosts } from "@/src/api/users";
+import { useAuth } from "@/src/auth/auth-context";
+import { PostCard } from "@/src/features/feed/components/post-card";
 import {
-  useToggleFavorite,
-  useToggleLike,
-  useToggleRepost,
+    useToggleFavorite,
+    useToggleLike,
+    useToggleRepost,
 } from "@/src/features/feed/hooks/use-post-mutations";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const BANNER_HEIGHT = 130;
 const AVATAR_SIZE = 76;
@@ -60,7 +61,9 @@ export default function ProfileScreen() {
       await deleteMyAccount(deletePassword);
       await logout();
     } catch (err) {
-      setDeleteError(err instanceof Error ? err.message : "Something went wrong");
+      setDeleteError(
+        err instanceof Error ? err.message : "Something went wrong",
+      );
       setDeleteLoading(false);
     }
   };
@@ -72,7 +75,9 @@ export default function ProfileScreen() {
         <View style={styles.guestBody}>
           <AppLogo size={72} />
           <Text style={styles.guestTitle}>Join Koinonia</Text>
-          <Text style={styles.guestSub}>Sign in to share insights and connect with the community.</Text>
+          <Text style={styles.guestSub}>
+            Sign in to share insights and connect with the community.
+          </Text>
           <Link href="/(auth)/login" asChild>
             <Pressable style={styles.primaryBtn}>
               <Text style={styles.primaryBtnText}>Log in</Text>
@@ -133,7 +138,9 @@ export default function ProfileScreen() {
           </Pressable>
           <Text style={styles.dot}>·</Text>
           <Pressable onPress={() => setDeleteModalVisible(true)}>
-            <Text style={[styles.secondaryLink, { color: "#71767B" }]}>Delete account</Text>
+            <Text style={[styles.secondaryLink, { color: "#71767B" }]}>
+              Delete account
+            </Text>
           </Pressable>
         </View>
       </View>
@@ -148,116 +155,124 @@ export default function ProfileScreen() {
   );
 
   return (
-    <ThemedView style={styles.root}>
-      <FlatList
-        data={posts}
-        keyExtractor={(item) => item.id.toString()}
-        ListHeaderComponent={() => profileHeader}
-        contentContainerStyle={{ paddingBottom: 24 }}
-        showsVerticalScrollIndicator={false}
-        onEndReached={() => {
-          if (postsQuery.hasNextPage) postsQuery.fetchNextPage();
-        }}
-        onEndReachedThreshold={0.5}
-        ListEmptyComponent={
-          postsQuery.isLoading ? (
-            <ActivityIndicator style={styles.centerSpinner} color="#1D9BF0" />
-          ) : (
-            <Text style={styles.emptyText}>No posts yet — share your first insight.</Text>
-          )
-        }
-        ListFooterComponent={
-          postsQuery.isFetchingNextPage ? (
-            <ActivityIndicator style={{ paddingVertical: 16 }} color="#1D9BF0" />
-          ) : null
-        }
-        renderItem={({ item }) => (
-          <PostCard
-            post={item}
-            canLike
-            canRepost
-            canFavorite
-            onOpenAuthor={() => {}}
-            onToggleLike={() => toggleLike.mutate(item)}
-            onAddComment={() => router.push(`/post/${item.id}`)}
-            onToggleRepost={() => toggleRepost.mutate(item)}
-            onToggleFavorite={() => toggleFavorite.mutate(item)}
-            onOpen={() => router.push(`/post/${item.id}`)}
-          />
-        )}
-      />
-
-      {/* Delete account modal */}
-      <Modal
-        visible={deleteModalVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setDeleteModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>Delete account</Text>
-            <Text style={styles.modalBody}>
-              This is permanent and cannot be undone. Enter your password to confirm.
-            </Text>
-
-            <View style={styles.modalInputWrapper}>
-              <TextInput
-                style={styles.modalInput}
-                placeholder="Password"
-                placeholderTextColor="#71767B"
-                secureTextEntry={!showDeletePassword}
-                value={deletePassword}
-                onChangeText={setDeletePassword}
+    <SafeAreaView style={styles.root} edges={["top"]}>
+      <ThemedView style={styles.root}>
+        <FlatList
+          data={posts}
+          keyExtractor={(item) => item.id.toString()}
+          ListHeaderComponent={() => profileHeader}
+          contentContainerStyle={{ paddingBottom: 24 }}
+          showsVerticalScrollIndicator={false}
+          onEndReached={() => {
+            if (postsQuery.hasNextPage) postsQuery.fetchNextPage();
+          }}
+          onEndReachedThreshold={0.5}
+          ListEmptyComponent={
+            postsQuery.isLoading ? (
+              <ActivityIndicator style={styles.centerSpinner} color="#1D9BF0" />
+            ) : (
+              <Text style={styles.emptyText}>
+                No posts yet — share your first insight.
+              </Text>
+            )
+          }
+          ListFooterComponent={
+            postsQuery.isFetchingNextPage ? (
+              <ActivityIndicator
+                style={{ paddingVertical: 16 }}
+                color="#1D9BF0"
               />
-              <Pressable
-                onPress={() => setShowDeletePassword((v) => !v)}
-                style={styles.eyeBtn}
-              >
-                <IconSymbol
-                  size={20}
-                  name={showDeletePassword ? "eye.slash" : "eye"}
-                  color="#71767B"
+            ) : null
+          }
+          renderItem={({ item }) => (
+            <PostCard
+              post={item}
+              canLike
+              canRepost
+              canFavorite
+              onOpenAuthor={() => {}}
+              onToggleLike={() => toggleLike.mutate(item)}
+              onAddComment={() => router.push(`/post/${item.id}`)}
+              onToggleRepost={() => toggleRepost.mutate(item)}
+              onToggleFavorite={() => toggleFavorite.mutate(item)}
+              onOpen={() => router.push(`/post/${item.id}`)}
+            />
+          )}
+        />
+
+        {/* Delete account modal */}
+        <Modal
+          visible={deleteModalVisible}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setDeleteModalVisible(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalCard}>
+              <Text style={styles.modalTitle}>Delete account</Text>
+              <Text style={styles.modalBody}>
+                This is permanent and cannot be undone. Enter your password to
+                confirm.
+              </Text>
+
+              <View style={styles.modalInputWrapper}>
+                <TextInput
+                  style={styles.modalInput}
+                  placeholder="Password"
+                  placeholderTextColor="#71767B"
+                  secureTextEntry={!showDeletePassword}
+                  value={deletePassword}
+                  onChangeText={setDeletePassword}
                 />
-              </Pressable>
-            </View>
+                <Pressable
+                  onPress={() => setShowDeletePassword((v) => !v)}
+                  style={styles.eyeBtn}
+                >
+                  <IconSymbol
+                    size={20}
+                    name={showDeletePassword ? "eye.slash" : "eye"}
+                    color="#71767B"
+                  />
+                </Pressable>
+              </View>
 
-            {deleteError ? (
-              <Text style={styles.errorText}>{deleteError}</Text>
-            ) : null}
+              {deleteError ? (
+                <Text style={styles.errorText}>{deleteError}</Text>
+              ) : null}
 
-            <View style={styles.modalActions}>
-              <Pressable
-                style={[styles.outlineBtn, { flex: 1 }]}
-                onPress={() => {
-                  setDeleteModalVisible(false);
-                  setDeletePassword("");
-                  setDeleteError(null);
-                  setShowDeletePassword(false);
-                }}
-                disabled={deleteLoading}
-              >
-                <Text style={styles.outlineBtnText}>Cancel</Text>
-              </Pressable>
+              <View style={styles.modalActions}>
+                <Pressable
+                  style={[styles.outlineBtn, { flex: 1 }]}
+                  onPress={() => {
+                    setDeleteModalVisible(false);
+                    setDeletePassword("");
+                    setDeleteError(null);
+                    setShowDeletePassword(false);
+                  }}
+                  disabled={deleteLoading}
+                >
+                  <Text style={styles.outlineBtnText}>Cancel</Text>
+                </Pressable>
 
-              <Pressable
-                style={[
-                  styles.deleteConfirmBtn,
-                  { flex: 1 },
-                  (!deletePassword || deleteLoading) && styles.btnDisabled,
-                ]}
-                onPress={handleDeleteAccount}
-                disabled={!deletePassword || deleteLoading}
-              >
-                <Text style={styles.deleteConfirmText}>
-                  {deleteLoading ? "Deleting…" : "Delete"}
-                </Text>
-              </Pressable>
+                <Pressable
+                  style={[
+                    styles.deleteConfirmBtn,
+                    { flex: 1 },
+                    (!deletePassword || deleteLoading) && styles.btnDisabled,
+                  ]}
+                  onPress={handleDeleteAccount}
+                  disabled={!deletePassword || deleteLoading}
+                >
+                  <Text style={styles.deleteConfirmText}>
+                    {deleteLoading ? "Deleting…" : "Delete"}
+                  </Text>
+                </Pressable>
+              </View>
             </View>
           </View>
-        </View>
-      </Modal>
-    </ThemedView>
+        </Modal>
+      </ThemedView>
+    </SafeAreaView>
   );
 }
 

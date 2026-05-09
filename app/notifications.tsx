@@ -1,16 +1,18 @@
 import { useRouter } from "expo-router";
+import { StatusBar } from "expo-status-bar";
+import type { ComponentProps } from "react";
 import {
-  ActivityIndicator,
-  FlatList,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
+    FlatList,
+    Pressable,
+    StyleSheet,
+    Text,
+    View
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-import { IconSymbol } from "@/components/ui/icon-symbol";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
+import { IconSymbol } from "@/components/ui/icon-symbol";
 
 interface Notification {
   id: string;
@@ -84,19 +86,26 @@ const NOTIFICATION_COLORS = {
   favorite: "#1D9BF0",
 };
 
+type NotificationIconName = ComponentProps<typeof IconSymbol>["name"];
+
 const NOTIFICATION_ICONS = {
   like: "heart.fill",
   follow: "person.badge.plus.fill",
   comment: "bubble.left.fill",
   repost: "arrow.2.squarepath",
   favorite: "bookmark.fill",
-};
+} satisfies Record<Notification["type"], NotificationIconName>;
 
 export default function NotificationsScreen() {
   const router = useRouter();
 
   const renderNotification = ({ item }: { item: Notification }) => (
-    <Pressable style={[styles.notificationItem, item.unread && styles.notificationUnread]}>
+    <Pressable
+      style={[
+        styles.notificationItem,
+        item.unread && styles.notificationUnread,
+      ]}
+    >
       <View style={styles.avatarSection}>
         <View
           style={[
@@ -147,27 +156,35 @@ export default function NotificationsScreen() {
   );
 
   return (
-    <ThemedView style={styles.container}>
-      <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backBtn}>
-          <IconSymbol size={24} name="chevron.left.forwardslash.chevron.right" color="#E7E9EA" />
-        </Pressable>
-        <Text style={styles.headerTitle}>Notifications</Text>
-        <View style={styles.headerSpacer} />
-      </View>
+    <SafeAreaView style={styles.container} edges={["top"]}>
+      <StatusBar style="light" backgroundColor="#000000" />
+      <ThemedView style={styles.container}>
+        <View style={styles.header}>
+          <Pressable onPress={() => router.back()} style={styles.backBtn}>
+            <IconSymbol
+              size={24}
+              name="chevron.left.forwardslash.chevron.right"
+              color="#E7E9EA"
+            />
+          </Pressable>
+          <Text style={styles.headerTitle}>Notifications</Text>
+          <View style={styles.headerSpacer} />
+        </View>
 
-      <FlatList
-        data={MOCK_NOTIFICATIONS}
-        keyExtractor={(item) => item.id}
-        renderItem={renderNotification}
-        scrollEnabled={true}
-        ListEmptyComponent={
-          <ThemedText style={styles.emptyText}>
-            No notifications yet. When someone interacts with your posts, you'll see it here.
-          </ThemedText>
-        }
-      />
-    </ThemedView>
+        <FlatList
+          data={MOCK_NOTIFICATIONS}
+          keyExtractor={(item) => item.id}
+          renderItem={renderNotification}
+          scrollEnabled={true}
+          ListEmptyComponent={
+            <ThemedText style={styles.emptyText}>
+              No notifications yet. When someone interacts with your posts,
+              you'll see it here.
+            </ThemedText>
+          }
+        />
+      </ThemedView>
+    </SafeAreaView>
   );
 }
 

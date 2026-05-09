@@ -23,10 +23,7 @@ export function PostAuthorMenu({
       onRequestClose={onClose}
     >
       {/* Dimmed backdrop */}
-      <Pressable
-        style={styles.backdrop}
-        onPress={onClose}
-      />
+      <Pressable style={styles.backdrop} onPress={onClose} />
 
       {/* Bottom sheet */}
       <View style={styles.sheetContainer}>

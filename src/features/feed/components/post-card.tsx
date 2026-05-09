@@ -1,6 +1,6 @@
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { PostResponse } from "@/src/api/types";
@@ -68,127 +68,130 @@ export function PostCard({
   return (
     <>
       <Pressable onPress={onOpen} style={styles.card}>
-      <View style={styles.row}>
-        <Pressable
-          onPress={onOpenAuthor}
-          disabled={!onOpenAuthor}
-          style={styles.avatarCol}
-        >
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{authorInitial}</Text>
-          </View>
-        </Pressable>
+        <View style={styles.row}>
+          <Pressable
+            onPress={onOpenAuthor}
+            disabled={!onOpenAuthor}
+            style={styles.avatarCol}
+          >
+            <View style={styles.avatar}>
+              <Text style={styles.avatarText}>{authorInitial}</Text>
+            </View>
+          </Pressable>
 
-        <View style={styles.contentCol}>
-          <View style={styles.authorRow}>
-            <Pressable
-              onPress={onOpenAuthor}
-              disabled={!onOpenAuthor}
-              style={styles.authorInfo}
-            >
-              <Text style={styles.displayName} numberOfLines={1}>
-                {authorDisplayName}
-              </Text>
-              <Text style={styles.username} numberOfLines={1}>
-                {" "}
-                @{post.author.username}
-              </Text>
-            </Pressable>
-
-            {!isOwnPost && user && !post.author.followedByCurrentUser ? (
+          <View style={styles.contentCol}>
+            <View style={styles.authorRow}>
               <Pressable
-                style={styles.followBtn}
-                onPress={handleFollow}
-                disabled={toggleFollow.isPending}
+                onPress={onOpenAuthor}
+                disabled={!onOpenAuthor}
+                style={styles.authorInfo}
               >
-                <Text style={styles.followBtnText}>Follow</Text>
+                <Text style={styles.displayName} numberOfLines={1}>
+                  {authorDisplayName}
+                </Text>
+                <Text style={styles.username} numberOfLines={1}>
+                  {" "}
+                  @{post.author.username}
+                </Text>
               </Pressable>
-            ) : null}
 
-            {!isOwnPost && user && post.author.followedByCurrentUser ? (
+              {!isOwnPost && user && !post.author.followedByCurrentUser ? (
+                <Pressable
+                  style={styles.followBtn}
+                  onPress={handleFollow}
+                  disabled={toggleFollow.isPending}
+                >
+                  <Text style={styles.followBtnText}>Follow</Text>
+                </Pressable>
+              ) : null}
+
+              {!isOwnPost && user && post.author.followedByCurrentUser ? (
+                <Pressable
+                  style={styles.menuBtn}
+                  onPress={() => setMenuVisible(true)}
+                  disabled={toggleFollow.isPending}
+                >
+                  <MaterialCommunityIcons
+                    name="dots-horizontal"
+                    size={20}
+                    color={TEXT}
+                  />
+                </Pressable>
+              ) : null}
+            </View>
+
+            <Text style={styles.content}>{post.content}</Text>
+
+            <View style={styles.actionsRow}>
+              <Pressable onPress={onAddComment} style={styles.action}>
+                <IconSymbol size={18} name="bubble.left" color={MUTED} />
+                <Text style={styles.actionCount}>{post.commentCount}</Text>
+              </Pressable>
+
               <Pressable
-                style={styles.menuBtn}
-                onPress={() => setMenuVisible(true)}
-                disabled={toggleFollow.isPending}
+                onPress={onToggleRepost}
+                style={styles.action}
+                disabled={!canRepost || !onToggleRepost}
               >
-                <MaterialCommunityIcons
-                  name="dots-horizontal"
-                  size={20}
-                  color={TEXT}
+                <IconSymbol
+                  size={18}
+                  name="arrow.2.squarepath"
+                  color={isReshared ? REPOST_ACTIVE : MUTED}
+                />
+                <Text
+                  style={[
+                    styles.actionCount,
+                    isReshared && { color: REPOST_ACTIVE },
+                  ]}
+                >
+                  {post.repostCount}
+                </Text>
+              </Pressable>
+
+              <Pressable
+                onPress={onToggleLike}
+                style={styles.action}
+                disabled={!canLike || !onToggleLike}
+              >
+                <IconSymbol
+                  size={18}
+                  name={isLiked ? "heart.fill" : "heart"}
+                  color={isLiked ? LIKE_ACTIVE : MUTED}
+                />
+                <Text
+                  style={[
+                    styles.actionCount,
+                    isLiked && { color: LIKE_ACTIVE },
+                  ]}
+                >
+                  {post.likeCount}
+                </Text>
+              </Pressable>
+
+              <Pressable
+                onPress={onToggleFavorite}
+                style={styles.action}
+                disabled={!canFavorite || !onToggleFavorite}
+              >
+                <IconSymbol
+                  size={18}
+                  name={
+                    post.favoritedByCurrentUser ? "bookmark.fill" : "bookmark"
+                  }
+                  color={post.favoritedByCurrentUser ? FAVORITE_ACTIVE : MUTED}
                 />
               </Pressable>
-            ) : null}
-          </View>
-
-          <Text style={styles.content}>{post.content}</Text>
-
-          <View style={styles.actionsRow}>
-            <Pressable onPress={onAddComment} style={styles.action}>
-              <IconSymbol size={18} name="bubble.left" color={MUTED} />
-              <Text style={styles.actionCount}>{post.commentCount}</Text>
-            </Pressable>
-
-            <Pressable
-              onPress={onToggleRepost}
-              style={styles.action}
-              disabled={!canRepost || !onToggleRepost}
-            >
-              <IconSymbol
-                size={18}
-                name="arrow.2.squarepath"
-                color={isReshared ? REPOST_ACTIVE : MUTED}
-              />
-              <Text
-                style={[
-                  styles.actionCount,
-                  isReshared && { color: REPOST_ACTIVE },
-                ]}
-              >
-                {post.repostCount}
-              </Text>
-            </Pressable>
-
-            <Pressable
-              onPress={onToggleLike}
-              style={styles.action}
-              disabled={!canLike || !onToggleLike}
-            >
-              <IconSymbol
-                size={18}
-                name={isLiked ? "heart.fill" : "heart"}
-                color={isLiked ? LIKE_ACTIVE : MUTED}
-              />
-              <Text
-                style={[styles.actionCount, isLiked && { color: LIKE_ACTIVE }]}
-              >
-                {post.likeCount}
-              </Text>
-            </Pressable>
-
-            <Pressable
-              onPress={onToggleFavorite}
-              style={styles.action}
-              disabled={!canFavorite || !onToggleFavorite}
-            >
-              <IconSymbol
-                size={18}
-                name={
-                  post.favoritedByCurrentUser ? "bookmark.fill" : "bookmark"
-                }
-                color={post.favoritedByCurrentUser ? FAVORITE_ACTIVE : MUTED}
-              />
-            </Pressable>
+            </View>
           </View>
         </View>
-      </View>
-    </Pressable>
+      </Pressable>
 
-    <PostAuthorMenu
-      visible={menuVisible}
-      authorUsername={post.author.username}
-      onUnfollow={handleUnfollow}
-      onClose={() => setMenuVisible(false)}
-    />
+      <PostAuthorMenu
+        visible={menuVisible}
+        authorUsername={post.author.username}
+        onUnfollow={handleUnfollow}
+        onClose={() => setMenuVisible(false)}
+      />
     </>
   );
 }
