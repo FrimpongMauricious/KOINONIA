@@ -1,7 +1,17 @@
-import { InfiniteData, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+    InfiniteData,
+    useMutation,
+    useQueryClient,
+} from "@tanstack/react-query";
 
 import { followUser, unfollowUser } from "@/src/api/follows";
-import { FollowResponse, Page, PostResponse, PublicUserProfileResponse, CommentResponse } from "@/src/api/types";
+import {
+    CommentResponse,
+    FollowResponse,
+    Page,
+    PostResponse,
+    PublicUserProfileResponse,
+} from "@/src/api/types";
 
 type ToggleFollowVars = { targetUserId: number; currentlyFollowing: boolean };
 type ToggleFollowContext = {
@@ -15,9 +25,16 @@ type ToggleFollowContext = {
 export function useToggleFollow() {
   const queryClient = useQueryClient();
 
-  return useMutation<FollowResponse, Error, ToggleFollowVars, ToggleFollowContext>({
+  return useMutation<
+    FollowResponse,
+    Error,
+    ToggleFollowVars,
+    ToggleFollowContext
+  >({
     mutationFn: ({ targetUserId, currentlyFollowing }) =>
-      currentlyFollowing ? unfollowUser(targetUserId) : followUser(targetUserId),
+      currentlyFollowing
+        ? unfollowUser(targetUserId)
+        : followUser(targetUserId),
 
     onMutate: async ({ targetUserId, currentlyFollowing }) => {
       await queryClient.cancelQueries({ queryKey: ["feed"] });
@@ -46,7 +63,13 @@ export function useToggleFollow() {
             ...page,
             content: page.content.map((post) =>
               post.author.id === targetUserId
-                ? { ...post, author: { ...post.author, followedByCurrentUser: newFollowState } }
+                ? {
+                    ...post,
+                    author: {
+                      ...post.author,
+                      followedByCurrentUser: newFollowState,
+                    },
+                  }
                 : post,
             ),
           })),
@@ -56,7 +79,9 @@ export function useToggleFollow() {
       queryClient.setQueryData(["feed"], patchPostsInCache);
       queryClient.setQueryData(["my-favorites"], patchPostsInCache);
 
-      const postQueriesData = queryClient.getQueriesData({ queryKey: ["post"] });
+      const postQueriesData = queryClient.getQueriesData({
+        queryKey: ["post"],
+      });
       for (const [queryKey, data] of postQueriesData) {
         queryClient.setQueryData<PostResponse>(queryKey, (old) => {
           if (!old || old.author.id !== targetUserId) return old;
@@ -67,23 +92,34 @@ export function useToggleFollow() {
         });
       }
 
-      const commentQueriesData = queryClient.getQueriesData({ queryKey: ["comments"] });
+      const commentQueriesData = queryClient.getQueriesData({
+        queryKey: ["comments"],
+      });
       for (const [queryKey, data] of commentQueriesData) {
         commentsSnapshots.set(JSON.stringify(queryKey), data);
-        queryClient.setQueryData<InfiniteData<Page<CommentResponse>>>(queryKey, (old) => {
-          if (!old) return old;
-          return {
-            ...old,
-            pages: old.pages.map((page) => ({
-              ...page,
-              content: page.content.map((comment) =>
-                comment.author.id === targetUserId
-                  ? { ...comment, author: { ...comment.author, followedByCurrentUser: newFollowState } }
-                  : comment,
-              ),
-            })),
-          };
-        });
+        queryClient.setQueryData<InfiniteData<Page<CommentResponse>>>(
+          queryKey,
+          (old) => {
+            if (!old) return old;
+            return {
+              ...old,
+              pages: old.pages.map((page) => ({
+                ...page,
+                content: page.content.map((comment) =>
+                  comment.author.id === targetUserId
+                    ? {
+                        ...comment,
+                        author: {
+                          ...comment.author,
+                          followedByCurrentUser: newFollowState,
+                        },
+                      }
+                    : comment,
+                ),
+              })),
+            };
+          },
+        );
       }
 
       queryClient.setQueryData<PublicUserProfileResponse>(
@@ -100,7 +136,13 @@ export function useToggleFollow() {
             : old,
       );
 
-      return { feedSnapshot, favoritesSnapshot, userSnapshot, meSnapshot, commentsSnapshots };
+      return {
+        feedSnapshot,
+        favoritesSnapshot,
+        userSnapshot,
+        meSnapshot,
+        commentsSnapshots,
+      };
     },
 
     onError: (_err, { targetUserId }, ctx) => {

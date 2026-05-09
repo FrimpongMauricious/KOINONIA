@@ -1,17 +1,24 @@
 import { useRouter } from "expo-router";
-import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import {
+    ActivityIndicator,
+    FlatList,
+    Pressable,
+    StyleSheet,
+    Text,
+    View,
+} from "react-native";
 
 import { AppLogo } from "@/components/app-logo";
-import { IconSymbol } from "@/components/ui/icon-symbol";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
+import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useAuth } from "@/src/auth/auth-context";
 import { PostCard } from "@/src/features/feed/components/post-card";
 import { useFeed } from "@/src/features/feed/hooks/use-feed";
 import {
-  useToggleFavorite,
-  useToggleLike,
-  useToggleRepost,
+    useToggleFavorite,
+    useToggleLike,
+    useToggleRepost,
 } from "@/src/features/feed/hooks/use-post-mutations";
 
 export default function HomeScreen() {
@@ -40,7 +47,7 @@ export default function HomeScreen() {
         <Text style={styles.headerTitle}>Koinonia</Text>
         <Pressable
           style={styles.notificationBtn}
-          onPress={() => {}}
+          onPress={() => router.push("/notifications")}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         >
           <IconSymbol size={26} name="bell.fill" color="#E7E9EA" />

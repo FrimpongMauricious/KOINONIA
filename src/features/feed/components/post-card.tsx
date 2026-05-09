@@ -1,8 +1,8 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { IconSymbol } from "@/components/ui/icon-symbol";
-import { useAuth } from "@/src/auth/auth-context";
 import { PostResponse } from "@/src/api/types";
+import { useAuth } from "@/src/auth/auth-context";
 import { useToggleFollow } from "@/src/features/follows/hooks/use-follow-mutations";
 
 const LIKE_ACTIVE = "#F91880";
@@ -59,7 +59,11 @@ export function PostCard({
   return (
     <Pressable onPress={onOpen} style={styles.card}>
       <View style={styles.row}>
-        <Pressable onPress={onOpenAuthor} disabled={!onOpenAuthor} style={styles.avatarCol}>
+        <Pressable
+          onPress={onOpenAuthor}
+          disabled={!onOpenAuthor}
+          style={styles.avatarCol}
+        >
           <View style={styles.avatar}>
             <Text style={styles.avatarText}>{authorInitial}</Text>
           </View>
@@ -67,18 +71,36 @@ export function PostCard({
 
         <View style={styles.contentCol}>
           <View style={styles.authorRow}>
-            <Pressable onPress={onOpenAuthor} disabled={!onOpenAuthor} style={styles.authorInfo}>
-              <Text style={styles.displayName} numberOfLines={1}>{authorDisplayName}</Text>
-              <Text style={styles.username} numberOfLines={1}> @{post.author.username}</Text>
+            <Pressable
+              onPress={onOpenAuthor}
+              disabled={!onOpenAuthor}
+              style={styles.authorInfo}
+            >
+              <Text style={styles.displayName} numberOfLines={1}>
+                {authorDisplayName}
+              </Text>
+              <Text style={styles.username} numberOfLines={1}>
+                {" "}
+                @{post.author.username}
+              </Text>
             </Pressable>
 
             {!isOwnPost && user ? (
               <Pressable
-                style={[styles.followBtn, post.author.followedByCurrentUser && styles.followingBtn]}
+                style={[
+                  styles.followBtn,
+                  post.author.followedByCurrentUser && styles.followingBtn,
+                ]}
                 onPress={handleFollow}
                 disabled={toggleFollow.isPending}
               >
-                <Text style={[styles.followBtnText, post.author.followedByCurrentUser && styles.followingBtnText]}>
+                <Text
+                  style={[
+                    styles.followBtnText,
+                    post.author.followedByCurrentUser &&
+                      styles.followingBtnText,
+                  ]}
+                >
                   {post.author.followedByCurrentUser ? "Following" : "Follow"}
                 </Text>
               </Pressable>
@@ -103,7 +125,12 @@ export function PostCard({
                 name="arrow.2.squarepath"
                 color={isReshared ? REPOST_ACTIVE : MUTED}
               />
-              <Text style={[styles.actionCount, isReshared && { color: REPOST_ACTIVE }]}>
+              <Text
+                style={[
+                  styles.actionCount,
+                  isReshared && { color: REPOST_ACTIVE },
+                ]}
+              >
                 {post.repostCount}
               </Text>
             </Pressable>
@@ -118,7 +145,9 @@ export function PostCard({
                 name={isLiked ? "heart.fill" : "heart"}
                 color={isLiked ? LIKE_ACTIVE : MUTED}
               />
-              <Text style={[styles.actionCount, isLiked && { color: LIKE_ACTIVE }]}>
+              <Text
+                style={[styles.actionCount, isLiked && { color: LIKE_ACTIVE }]}
+              >
                 {post.likeCount}
               </Text>
             </Pressable>
@@ -130,7 +159,9 @@ export function PostCard({
             >
               <IconSymbol
                 size={18}
-                name={post.favoritedByCurrentUser ? "bookmark.fill" : "bookmark"}
+                name={
+                  post.favoritedByCurrentUser ? "bookmark.fill" : "bookmark"
+                }
                 color={post.favoritedByCurrentUser ? FAVORITE_ACTIVE : MUTED}
               />
             </Pressable>

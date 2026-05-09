@@ -1,26 +1,26 @@
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import {
-  ActivityIndicator,
-  FlatList,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
+    ActivityIndicator,
+    FlatList,
+    Pressable,
+    StyleSheet,
+    Text,
+    View,
 } from "react-native";
-import { useInfiniteQuery } from "@tanstack/react-query";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
-import { useAuth } from "@/src/auth/auth-context";
 import { fetchUserPosts } from "@/src/api/users";
+import { useAuth } from "@/src/auth/auth-context";
 import { PostCard } from "@/src/features/feed/components/post-card";
-import { useUserProfile } from "@/src/features/profile/hooks/use-user-profile";
-import { useToggleFollow } from "@/src/features/follows/hooks/use-follow-mutations";
 import {
-  useToggleFavorite,
-  useToggleLike,
-  useToggleRepost,
+    useToggleFavorite,
+    useToggleLike,
+    useToggleRepost,
 } from "@/src/features/feed/hooks/use-post-mutations";
+import { useToggleFollow } from "@/src/features/follows/hooks/use-follow-mutations";
+import { useUserProfile } from "@/src/features/profile/hooks/use-user-profile";
 
 const BANNER_HEIGHT = 130;
 const AVATAR_SIZE = 76;
@@ -32,7 +32,11 @@ export default function CreatorProfileScreen() {
   const { user } = useAuth();
   const isGuest = !user;
 
-  const { data: profile, isLoading: profileLoading, isError } = useUserProfile(numericId);
+  const {
+    data: profile,
+    isLoading: profileLoading,
+    isError,
+  } = useUserProfile(numericId);
 
   const postsQuery = useInfiniteQuery({
     queryKey: ["user-posts", numericId],
@@ -88,11 +92,19 @@ export default function CreatorProfileScreen() {
           <Pressable
             style={[styles.followBtn, isFollowing && styles.followingBtn]}
             onPress={() =>
-              toggleFollow.mutate({ targetUserId: numericId, currentlyFollowing: isFollowing })
+              toggleFollow.mutate({
+                targetUserId: numericId,
+                currentlyFollowing: isFollowing,
+              })
             }
             disabled={toggleFollow.isPending}
           >
-            <Text style={[styles.followBtnText, isFollowing && styles.followingBtnText]}>
+            <Text
+              style={[
+                styles.followBtnText,
+                isFollowing && styles.followingBtnText,
+              ]}
+            >
               {isFollowing ? "Following" : "Follow"}
             </Text>
           </Pressable>
@@ -148,7 +160,10 @@ export default function CreatorProfileScreen() {
         }
         ListFooterComponent={
           postsQuery.isFetchingNextPage ? (
-            <ActivityIndicator style={{ paddingVertical: 16 }} color="#1D9BF0" />
+            <ActivityIndicator
+              style={{ paddingVertical: 16 }}
+              color="#1D9BF0"
+            />
           ) : null
         }
         renderItem={({ item }) => (
