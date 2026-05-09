@@ -7,7 +7,7 @@ import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { Colors } from "@/constants/theme";
 
-export function NotificationBell({ size = 26 }: { size?: number }) {
+export function NotificationBell({ size = 23 }: { size?: number }) {
   const router = useRouter();
   const { status } = useAuth();
   const { count } = useUnreadCount(status === "authenticated");
