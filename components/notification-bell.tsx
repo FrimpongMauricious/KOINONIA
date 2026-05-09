@@ -3,7 +3,7 @@ import { View, Text, Pressable, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import { useAuth } from "@/src/auth/auth-context";
 import { useUnreadCount } from "@/src/features/notifications/hooks/use-unread-count";
-import { IconSymbol } from "@/components/ui/icon-symbol";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { Colors } from "@/constants/theme";
 
@@ -24,7 +24,7 @@ export function NotificationBell({ size = 26 }: { size?: number }) {
       accessibilityLabel={"Open notifications"}
     >
       <View style={styles.iconWrap}>
-        <IconSymbol size={size} name="notification.outline" color="#E7E9EA" />
+        <MaterialCommunityIcons size={size} name="bell" color="#E7E9EA" />
         {count > 0 ? (
           <View style={[styles.badge, { backgroundColor: palette.tint }]}>
             <Text style={styles.badgeText}>{badgeLabel}</Text>
