@@ -2,7 +2,6 @@ import { Link } from "expo-router";
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
-import { AppLogo } from "@/components/app-logo";
 import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useAuth } from "@/src/auth/auth-context";
@@ -31,7 +30,6 @@ export default function LoginScreen() {
   return (
     <ScreenContainer scroll keyboardAvoiding contentStyle={styles.container}>
       <View style={styles.inner}>
-        <AppLogo size={64} />
         <Text style={styles.title}>Log In</Text>
         <Text style={styles.subtitle}>Welcome back to Koinonia</Text>
 
