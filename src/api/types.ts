@@ -111,3 +111,35 @@ export type UpdateProfileRequest = {
   bio?: string;
   profilePictureUrl?: string;
 };
+
+export type NotificationType = "LIKE" | "COMMENT" | "REPOST" | "FOLLOW";
+
+export type ActorRef = {
+  id: number;
+  username: string;
+  displayName: string | null;
+  profilePictureUrl: string | null;
+};
+
+export type PostRef = {
+  id: number;
+  contentPreview: string;
+};
+
+export type NotificationResponse = {
+  id: number;
+  type: NotificationType;
+  actor: ActorRef;
+  post: PostRef | null;
+  commentPreview: string | null;
+  createdAt: string;
+  readAt: string | null;
+};
+
+export type UnreadCountResponse = {
+  count: number;
+};
+
+export type MarkAllReadResponse = {
+  markedRead: number;
+};
