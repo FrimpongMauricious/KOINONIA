@@ -1,17 +1,10 @@
 import { useRouter } from "expo-router";
-import {
-  ActivityIndicator,
-  FlatList,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { ActivityIndicator, FlatList, StyleSheet, Text, View } from "react-native";
 
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
-import { IconSymbol } from "@/components/ui/icon-symbol";
+import { NotificationBell } from "@/components/notification-bell";
 import { useAuth } from "@/src/auth/auth-context";
 import { PostCard } from "@/src/features/feed/components/post-card";
 import { useFeed } from "@/src/features/feed/hooks/use-feed";
@@ -45,13 +38,7 @@ export default function HomeScreen() {
       <ThemedView style={styles.container}>
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Koinonia</Text>
-          <Pressable
-            style={styles.notificationBtn}
-            onPress={() => router.push("/notifications")}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-          >
-            <IconSymbol size={26} name="bell.fill" color="#E7E9EA" />
-          </Pressable>
+          <NotificationBell />
           {isGuest ? <Text style={styles.guestBadge}>Guest</Text> : null}
         </View>
 
@@ -131,11 +118,6 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "800",
     flex: 1,
-  },
-  notificationBtn: {
-    padding: 8,
-    marginRight: 8,
-    marginLeft: 8,
   },
   guestBadge: {
     color: "#71767B",
