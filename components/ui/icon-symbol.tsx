@@ -39,6 +39,7 @@ const MAPPING = {
   "chevron.right": "chevron-right",
   "bell.fill": "notifications-active",
   "bell.slash.fill": "notifications_off",
+  "notification.outline": "notifications_none",
 } as IconMapping;
 
 /**
