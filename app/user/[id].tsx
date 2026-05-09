@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import {
@@ -8,12 +9,14 @@ import {
     Text,
     View,
 } from "react-native";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { fetchUserPosts } from "@/src/api/users";
 import { useAuth } from "@/src/auth/auth-context";
 import { PostCard } from "@/src/features/feed/components/post-card";
+import { PostAuthorMenu } from "@/src/features/feed/components/post-author-menu";
 import {
     useToggleFavorite,
     useToggleLike,
@@ -31,6 +34,7 @@ export default function CreatorProfileScreen() {
   const router = useRouter();
   const { user } = useAuth();
   const isGuest = !user;
+  const [menuVisible, setMenuVisible] = useState(false);
 
   const {
     data: profile,
@@ -88,9 +92,9 @@ export default function CreatorProfileScreen() {
           <Text style={styles.avatarInitial}>{initial}</Text>
         </View>
 
-        {!isOwnProfile && !isGuest ? (
+        {!isOwnProfile && !isGuest && !isFollowing ? (
           <Pressable
-            style={[styles.followBtn, isFollowing && styles.followingBtn]}
+            style={styles.followBtn}
             onPress={() =>
               toggleFollow.mutate({
                 targetUserId: numericId,
@@ -99,14 +103,21 @@ export default function CreatorProfileScreen() {
             }
             disabled={toggleFollow.isPending}
           >
-            <Text
-              style={[
-                styles.followBtnText,
-                isFollowing && styles.followingBtnText,
-              ]}
-            >
-              {isFollowing ? "Following" : "Follow"}
-            </Text>
+            <Text style={styles.followBtnText}>Follow</Text>
+          </Pressable>
+        ) : null}
+
+        {!isOwnProfile && !isGuest && isFollowing ? (
+          <Pressable
+            style={styles.menuBtn}
+            onPress={() => setMenuVisible(true)}
+            disabled={toggleFollow.isPending}
+          >
+            <MaterialCommunityIcons
+              name="dots-horizontal"
+              size={20}
+              color="#E7E9EA"
+            />
           </Pressable>
         ) : null}
       </View>
@@ -186,6 +197,19 @@ export default function CreatorProfileScreen() {
           />
         )}
       />
+
+      <PostAuthorMenu
+        visible={menuVisible}
+        authorUsername={profile.username}
+        onUnfollow={() => {
+          toggleFollow.mutate({
+            targetUserId: numericId,
+            currentlyFollowing: isFollowing,
+          });
+          setMenuVisible(false);
+        }}
+        onClose={() => setMenuVisible(false)}
+      />
     </ThemedView>
   );
 }
@@ -251,6 +275,11 @@ const styles = StyleSheet.create({
   },
   followingBtnText: {
     color: "#E7E9EA",
+  },
+  menuBtn: {
+    padding: 4,
+    alignItems: "center",
+    justifyContent: "center",
   },
 
   /* ── Profile info ── */

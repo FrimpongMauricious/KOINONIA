@@ -1,9 +1,12 @@
+import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { PostResponse } from "@/src/api/types";
 import { useAuth } from "@/src/auth/auth-context";
 import { useToggleFollow } from "@/src/features/follows/hooks/use-follow-mutations";
+import { PostAuthorMenu } from "./post-author-menu";
 
 const LIKE_ACTIVE = "#F91880";
 const REPOST_ACTIVE = "#00BA7C";
@@ -48,6 +51,7 @@ export function PostCard({
   const isOwnPost = user?.id === post.author.id;
 
   const toggleFollow = useToggleFollow();
+  const [menuVisible, setMenuVisible] = useState(false);
 
   const handleFollow = () => {
     toggleFollow.mutate({
@@ -56,8 +60,14 @@ export function PostCard({
     });
   };
 
+  const handleUnfollow = () => {
+    handleFollow();
+    setMenuVisible(false);
+  };
+
   return (
-    <Pressable onPress={onOpen} style={styles.card}>
+    <>
+      <Pressable onPress={onOpen} style={styles.card}>
       <View style={styles.row}>
         <Pressable
           onPress={onOpenAuthor}
@@ -85,24 +95,27 @@ export function PostCard({
               </Text>
             </Pressable>
 
-            {!isOwnPost && user ? (
+            {!isOwnPost && user && !post.author.followedByCurrentUser ? (
               <Pressable
-                style={[
-                  styles.followBtn,
-                  post.author.followedByCurrentUser && styles.followingBtn,
-                ]}
+                style={styles.followBtn}
                 onPress={handleFollow}
                 disabled={toggleFollow.isPending}
               >
-                <Text
-                  style={[
-                    styles.followBtnText,
-                    post.author.followedByCurrentUser &&
-                      styles.followingBtnText,
-                  ]}
-                >
-                  {post.author.followedByCurrentUser ? "Following" : "Follow"}
-                </Text>
+                <Text style={styles.followBtnText}>Follow</Text>
+              </Pressable>
+            ) : null}
+
+            {!isOwnPost && user && post.author.followedByCurrentUser ? (
+              <Pressable
+                style={styles.menuBtn}
+                onPress={() => setMenuVisible(true)}
+                disabled={toggleFollow.isPending}
+              >
+                <MaterialCommunityIcons
+                  name="dots-horizontal"
+                  size={20}
+                  color={TEXT}
+                />
               </Pressable>
             ) : null}
           </View>
@@ -169,6 +182,14 @@ export function PostCard({
         </View>
       </View>
     </Pressable>
+
+    <PostAuthorMenu
+      visible={menuVisible}
+      authorUsername={post.author.username}
+      onUnfollow={handleUnfollow}
+      onClose={() => setMenuVisible(false)}
+    />
+    </>
   );
 }
 
@@ -241,6 +262,11 @@ const styles = StyleSheet.create({
   },
   followingBtnText: {
     color: TEXT,
+  },
+  menuBtn: {
+    padding: 4,
+    alignItems: "center",
+    justifyContent: "center",
   },
   content: {
     color: TEXT,
