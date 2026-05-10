@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { IconSymbol } from "@/components/ui/icon-symbol";
-import { PostResponse } from "@/src/api/types";
+import { PostResponse, TOPIC_DISPLAY_NAMES } from "@/src/api/types";
 import { useAuth } from "@/src/auth/auth-context";
 import { useToggleFollow } from "@/src/features/follows/hooks/use-follow-mutations";
 import { PostAuthorMenu } from "./post-author-menu";
@@ -120,6 +120,16 @@ export function PostCard({
                 </Pressable>
               ) : null}
             </View>
+
+            {post.title && <Text style={styles.title}>{post.title}</Text>}
+
+            {post.topic !== "GENERAL" && (
+              <View style={styles.topicBadge}>
+                <Text style={styles.topicBadgeText}>
+                  {TOPIC_DISPLAY_NAMES[post.topic]}
+                </Text>
+              </View>
+            )}
 
             <Text style={styles.content}>{post.content}</Text>
 
@@ -289,6 +299,25 @@ const styles = StyleSheet.create({
     color: TEXT,
     fontSize: 15,
     lineHeight: 22,
+  },
+  title: {
+    color: TEXT,
+    fontSize: 16,
+    fontWeight: "700",
+    marginBottom: 4,
+  },
+  topicBadge: {
+    alignSelf: "flex-start",
+    backgroundColor: "#2F3336",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginBottom: 4,
+  },
+  topicBadgeText: {
+    color: "#1D9BF0",
+    fontSize: 12,
+    fontWeight: "600",
   },
   actionsRow: {
     flexDirection: "row",

@@ -1,17 +1,23 @@
 import { useRouter } from "expo-router";
 import { useMemo, useState } from "react";
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Modal, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
 import { ScreenContainer } from "@/components/screen-container";
 import { ThemedText } from "@/components/themed-text";
+import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useAuth } from "@/src/auth/auth-context";
+import { Topic, TOPIC_DISPLAY_NAMES, USER_FACING_TOPICS } from "@/src/api/types";
 import { useCreatePost } from "@/src/features/feed/hooks/use-post-mutations";
 
 const MAX_POST_LENGTH = 1000;
+const MAX_TITLE_LENGTH = 100;
 
 export default function ComposeScreen() {
   const router = useRouter();
+  const [title, setTitle] = useState("");
+  const [topic, setTopic] = useState<Topic | null>(null);
   const [content, setContent] = useState("");
+  const [topicModalVisible, setTopicModalVisible] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const { status } = useAuth();
   const isGuest = status !== "authenticated";
@@ -22,10 +28,22 @@ export default function ComposeScreen() {
     [content],
   );
 
+  const canPublish = content.trim().length > 0 && topic !== null;
+
   const handlePublish = async () => {
     setErrorMessage(null);
+    if (!topic) {
+      setErrorMessage("Please select a topic");
+      return;
+    }
     try {
-      await createPost.mutateAsync(content.trim());
+      await createPost.mutateAsync({
+        title: title.trim() || undefined,
+        topic,
+        content: content.trim(),
+      });
+      setTitle("");
+      setTopic(null);
       setContent("");
       router.back();
     } catch (err) {
@@ -48,6 +66,33 @@ export default function ComposeScreen() {
       ) : (
         <View style={styles.inner}>
           <TextInput
+            style={styles.titleInput}
+            placeholder="Add a title (optional)"
+            placeholderTextColor="#71767B"
+            value={title}
+            maxLength={MAX_TITLE_LENGTH}
+            onChangeText={setTitle}
+          />
+          <Text style={styles.titleCharCount}>
+            {title.length}/{MAX_TITLE_LENGTH}
+          </Text>
+
+          <Pressable
+            style={styles.topicButton}
+            onPress={() => setTopicModalVisible(true)}
+          >
+            <Text
+              style={[
+                styles.topicButtonText,
+                !topic && styles.topicButtonPlaceholder,
+              ]}
+            >
+              {topic ? TOPIC_DISPLAY_NAMES[topic] : "Select a topic *"}
+            </Text>
+            <IconSymbol size={20} name="chevron.down" color="#71767B" />
+          </Pressable>
+
+          <TextInput
             style={styles.input}
             multiline
             maxLength={MAX_POST_LENGTH}
@@ -65,9 +110,12 @@ export default function ComposeScreen() {
           ) : null}
 
           <Pressable
-            style={[styles.publishBtn, (!content.trim() || createPost.isPending) && styles.publishBtnDisabled]}
+            style={[
+              styles.publishBtn,
+              (!canPublish || createPost.isPending) && styles.publishBtnDisabled,
+            ]}
             onPress={handlePublish}
-            disabled={createPost.isPending || !content.trim()}
+            disabled={!canPublish || createPost.isPending}
           >
             <Text style={styles.publishBtnText}>
               {createPost.isPending ? "Publishing…" : "Publish"}
@@ -75,6 +123,47 @@ export default function ComposeScreen() {
           </Pressable>
         </View>
       )}
+
+      <Modal
+        visible={topicModalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setTopicModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Select Topic</Text>
+              <Pressable onPress={() => setTopicModalVisible(false)}>
+                <IconSymbol size={24} name="xmark" color="#E7E9EA" />
+              </Pressable>
+            </View>
+
+            {USER_FACING_TOPICS.map((t) => (
+              <Pressable
+                key={t}
+                style={styles.topicOption}
+                onPress={() => {
+                  setTopic(t);
+                  setTopicModalVisible(false);
+                }}
+              >
+                <Text
+                  style={[
+                    styles.topicOptionText,
+                    topic === t && styles.topicOptionSelected,
+                  ]}
+                >
+                  {TOPIC_DISPLAY_NAMES[t]}
+                </Text>
+                {topic === t && (
+                  <IconSymbol size={20} name="checkmark" color="#1D9BF0" />
+                )}
+              </Pressable>
+            ))}
+          </View>
+        </View>
+      </Modal>
     </ScreenContainer>
   );
 }
@@ -102,8 +191,40 @@ const styles = StyleSheet.create({
   guestText: {
     padding: 16,
   },
+  titleInput: {
+    backgroundColor: "#16181C",
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: "#2F3336",
+    borderRadius: 8,
+    padding: 12,
+    color: "#E7E9EA",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  titleCharCount: {
+    color: "#71767B",
+    fontSize: 12,
+    textAlign: "right",
+  },
+  topicButton: {
+    backgroundColor: "#16181C",
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: "#2F3336",
+    borderRadius: 8,
+    padding: 12,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  topicButtonText: {
+    color: "#E7E9EA",
+    fontSize: 16,
+  },
+  topicButtonPlaceholder: {
+    color: "#71767B",
+  },
   input: {
-    minHeight: 160,
+    minHeight: 140,
     backgroundColor: "#16181C",
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: "#2F3336",
@@ -136,5 +257,47 @@ const styles = StyleSheet.create({
   error: {
     color: "#F4212E",
     fontSize: 13,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "flex-end",
+  },
+  modalContent: {
+    backgroundColor: "#16181C",
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
+    maxHeight: "80%",
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: "#2F3336",
+  },
+  modalTitle: {
+    color: "#E7E9EA",
+    fontSize: 18,
+    fontWeight: "700",
+  },
+  topicOption: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: "#2F3336",
+  },
+  topicOptionText: {
+    color: "#E7E9EA",
+    fontSize: 16,
+  },
+  topicOptionSelected: {
+    color: "#1D9BF0",
+    fontWeight: "600",
   },
 });

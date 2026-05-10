@@ -9,7 +9,7 @@ import {
   unlikePost,
   unrepostPost,
 } from "@/src/api/posts";
-import { LikeResponse, Page, PostResponse } from "@/src/api/types";
+import { CreatePostRequest, LikeResponse, Page, PostResponse } from "@/src/api/types";
 
 function patchFeedPost(
   old: InfiniteData<Page<PostResponse>> | undefined,
@@ -230,8 +230,8 @@ export function useToggleFavorite() {
 export function useCreatePost() {
   const queryClient = useQueryClient();
 
-  return useMutation<PostResponse, Error, string>({
-    mutationFn: (content) => createPost(content),
+  return useMutation<PostResponse, Error, CreatePostRequest>({
+    mutationFn: (payload) => createPost(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["feed"] });
     },

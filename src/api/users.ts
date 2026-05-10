@@ -30,6 +30,18 @@ export async function deleteMyAccount(password: string): Promise<void> {
   await apiClient.delete("/api/v1/users/me", { data: { password } });
 }
 
+export async function searchUsers(
+  query: string,
+  page = 0,
+  size = 20,
+): Promise<Page<PublicUserProfileResponse>> {
+  const res = await apiClient.get<Page<PublicUserProfileResponse>>(
+    "/api/v1/users/search",
+    { params: { query, page, size } },
+  );
+  return res.data;
+}
+
 export async function fetchUserPosts(
   userId: number,
   page = 0,

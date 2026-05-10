@@ -1,12 +1,13 @@
 import { apiClient } from "@/src/api/client";
-import { LikeResponse, Page, PostResponse } from "@/src/api/types";
+import { CreatePostRequest, LikeResponse, Page, PostResponse, Topic } from "@/src/api/types";
 
 export async function fetchFeed(
   page: number,
   size = 20,
+  topic?: Topic,
 ): Promise<Page<PostResponse>> {
   const res = await apiClient.get<Page<PostResponse>>("/api/v1/posts", {
-    params: { page, size },
+    params: { page, size, ...(topic && { topic }) },
   });
   return res.data;
 }
@@ -16,8 +17,8 @@ export async function fetchPostById(id: number): Promise<PostResponse> {
   return res.data;
 }
 
-export async function createPost(content: string): Promise<PostResponse> {
-  const res = await apiClient.post<PostResponse>("/api/v1/posts", { content });
+export async function createPost(payload: CreatePostRequest): Promise<PostResponse> {
+  const res = await apiClient.post<PostResponse>("/api/v1/posts", payload);
   return res.data;
 }
 

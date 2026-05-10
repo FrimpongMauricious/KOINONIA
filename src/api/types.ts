@@ -50,6 +50,8 @@ export type AuthorRef = {
 
 export type PostResponse = {
   id: number;
+  title: string | null;
+  topic: Topic;
   content: string;
   createdAt: string;
   updatedAt: string;
@@ -145,4 +147,54 @@ export type UnreadCountResponse = {
 
 export type MarkAllReadResponse = {
   markedRead: number;
+};
+
+export type Topic =
+  | "FAITH"
+  | "PRAYER"
+  | "WORSHIP"
+  | "SCRIPTURE"
+  | "COMMUNITY"
+  | "TESTIMONY"
+  | "ENCOURAGEMENT"
+  | "DOCTRINE"
+  | "GENERAL";
+
+export const USER_FACING_TOPICS: Topic[] = [
+  "FAITH",
+  "PRAYER",
+  "WORSHIP",
+  "SCRIPTURE",
+  "COMMUNITY",
+  "TESTIMONY",
+  "ENCOURAGEMENT",
+  "DOCTRINE",
+];
+
+export const TOPIC_DISPLAY_NAMES: Record<Topic, string> = {
+  FAITH: "Faith",
+  PRAYER: "Prayer",
+  WORSHIP: "Worship",
+  SCRIPTURE: "Scripture",
+  COMMUNITY: "Community",
+  TESTIMONY: "Testimony",
+  ENCOURAGEMENT: "Encouragement",
+  DOCTRINE: "Doctrine",
+  GENERAL: "General",
+};
+
+export type TopicEntry = {
+  topic: Topic;
+  displayName: string;
+  postCount: number;
+};
+
+export type TopicsResponse = {
+  topics: TopicEntry[];
+};
+
+export type CreatePostRequest = {
+  title?: string;
+  topic: Topic;
+  content: string;
 };
