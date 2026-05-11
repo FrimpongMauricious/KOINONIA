@@ -13,17 +13,17 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
-import { useAuth } from "@/src/auth/auth-context";
 import { Topic } from "@/src/api/types";
-import { useFeed } from "@/src/features/feed/hooks/use-feed";
-import { useUserSearch } from "@/src/features/users/hooks/use-user-search";
-import { useTopics } from "@/src/features/topics/hooks/use-topics";
+import { useAuth } from "@/src/auth/auth-context";
 import { PostCard } from "@/src/features/feed/components/post-card";
+import { useFeed } from "@/src/features/feed/hooks/use-feed";
 import {
   useToggleFavorite,
   useToggleLike,
   useToggleRepost,
 } from "@/src/features/feed/hooks/use-post-mutations";
+import { useTopics } from "@/src/features/topics/hooks/use-topics";
+import { useUserSearch } from "@/src/features/users/hooks/use-user-search";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 export default function DiscoverScreen() {
@@ -37,7 +37,9 @@ export default function DiscoverScreen() {
 
   const { data: topicsData, isLoading: topicsLoading } = useTopics();
   const searchResults = useUserSearch(debouncedQuery);
-  const feedResults = useFeed(selectedTopic === null ? undefined : selectedTopic);
+  const feedResults = useFeed(
+    selectedTopic === null ? undefined : selectedTopic,
+  );
 
   const toggleLike = useToggleLike();
   const toggleRepost = useToggleRepost();
@@ -69,7 +71,7 @@ export default function DiscoverScreen() {
             />
             <TextInput
               style={styles.searchInput}
-              placeholder="Search for users…"
+              placeholder="Find fellow believers…"
               placeholderTextColor="#71767B"
               value={query}
               onChangeText={setQuery}
@@ -100,9 +102,7 @@ export default function DiscoverScreen() {
               color="#1D9BF0"
             />
           ) : searchResults.data?.content.length === 0 ? (
-            <ThemedText style={styles.emptyState}>
-              No users found.
-            </ThemedText>
+            <ThemedText style={styles.emptyState}>No users found.</ThemedText>
           ) : (
             <FlatList
               data={searchResults.data?.content ?? []}
@@ -183,8 +183,7 @@ export default function DiscoverScreen() {
                   <Pressable
                     style={[
                       styles.topicChip,
-                      selectedTopic === item.topic &&
-                        styles.topicChipActive,
+                      selectedTopic === item.topic && styles.topicChipActive,
                     ]}
                     onPress={() => setSelectedTopic(item.topic)}
                   >
@@ -222,8 +221,7 @@ export default function DiscoverScreen() {
                 refreshing={feedResults.isRefetching}
                 onRefresh={feedResults.refetch}
                 onEndReached={() => {
-                  if (feedResults.hasNextPage)
-                    feedResults.fetchNextPage();
+                  if (feedResults.hasNextPage) feedResults.fetchNextPage();
                 }}
                 onEndReachedThreshold={0.5}
                 ListFooterComponent={
