@@ -155,6 +155,7 @@ export default function DiscoverScreen() {
                 color="#1D9BF0"
               />
             ) : (
+              <View style={styles.topicsRow}>
               <FlatList
                 horizontal
                 data={topicEntries}
@@ -199,6 +200,7 @@ export default function DiscoverScreen() {
                   </Pressable>
                 )}
               />
+              </View>
             )}
 
             {/* Filtered posts */}
@@ -210,7 +212,7 @@ export default function DiscoverScreen() {
               />
             ) : feedResults.posts.length === 0 ? (
               <ThemedText style={styles.emptyState}>
-                No posts yet in this topic.
+                Messages for this topic have not yet been uploaded.
               </ThemedText>
             ) : (
               <FlatList
@@ -288,6 +290,10 @@ const styles = StyleSheet.create({
     color: "#E7E9EA",
     fontSize: 14,
   },
+  topicsRow: {
+    flexGrow: 0,
+    flexShrink: 0,
+  },
   topicChipsContainer: {
     paddingHorizontal: 16,
     paddingVertical: 12,
@@ -299,7 +305,7 @@ const styles = StyleSheet.create({
     borderColor: "#2F3336",
     borderRadius: 20,
     paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingVertical: 8,
   },
   topicChipActive: {
     backgroundColor: "#1D9BF0",
