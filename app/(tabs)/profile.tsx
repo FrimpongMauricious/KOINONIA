@@ -1,5 +1,6 @@
 import { formatCount } from "@/src/utils/format";
 import { Image } from "expo-image";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { Link, useRouter } from "expo-router";
 import { useState } from "react";
@@ -115,18 +116,23 @@ export default function ProfileScreen() {
 
       {/* Avatar row — overlaps banner */}
       <View style={styles.avatarRow}>
-        {user?.profilePictureUrl ? (
-          <Image
-            source={{ uri: user.profilePictureUrl }}
-            style={styles.avatar}
-            contentFit="cover"
-            transition={150}
-          />
-        ) : (
-          <View style={styles.avatar}>
-            <Text style={styles.avatarInitial}>{initial}</Text>
+        <Pressable onPress={() => router.push("/edit-profile")} style={styles.avatarPressable}>
+          {user?.profilePictureUrl ? (
+            <Image
+              source={{ uri: user.profilePictureUrl }}
+              style={styles.avatar}
+              contentFit="cover"
+              transition={150}
+            />
+          ) : (
+            <View style={styles.avatar}>
+              <Text style={styles.avatarInitial}>{initial}</Text>
+            </View>
+          )}
+          <View style={styles.avatarCameraBadge}>
+            <MaterialCommunityIcons name="camera-outline" size={13} color="#FFFFFF" />
           </View>
-        )}
+        </Pressable>
         <Link href="/edit-profile" asChild>
           <Pressable style={styles.editBtn}>
             <Text style={styles.editBtnText}>Edit profile</Text>
@@ -350,6 +356,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     marginTop: -(AVATAR_SIZE / 2),
     marginBottom: 12,
+  },
+  avatarPressable: {
+    position: "relative",
+  },
+  avatarCameraBadge: {
+    position: "absolute",
+    bottom: 2,
+    right: 2,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: "#1D9BF0",
+    borderWidth: 2,
+    borderColor: "#000000",
+    alignItems: "center",
+    justifyContent: "center",
   },
   avatar: {
     width: AVATAR_SIZE,

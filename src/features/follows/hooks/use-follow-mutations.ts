@@ -1,5 +1,6 @@
 import {
     InfiniteData,
+    QueryKey,
     useMutation,
     useQueryClient,
 } from "@tanstack/react-query";
@@ -13,10 +14,13 @@ import {
     PublicUserProfileResponse,
 } from "@/src/api/types";
 
+type PostsSnapshot = [QueryKey, InfiniteData<Page<PostResponse>> | undefined][];
+
 type ToggleFollowVars = { targetUserId: number; currentlyFollowing: boolean };
 type ToggleFollowContext = {
-  feedSnapshot: unknown;
-  favoritesSnapshot: unknown;
+  feedSnapshots: PostsSnapshot;
+  userPostsSnapshots: PostsSnapshot;
+  favoritesSnapshot: InfiniteData<Page<PostResponse>> | undefined;
   userSnapshot: unknown;
   meSnapshot: unknown;
   commentsSnapshots: Map<string, unknown>;
@@ -45,8 +49,15 @@ export function useToggleFollow() {
       await queryClient.cancelQueries({ queryKey: ["comments"] });
       await queryClient.cancelQueries({ queryKey: ["post"] });
 
-      const feedSnapshot = queryClient.getQueryData(["feed"]);
-      const favoritesSnapshot = queryClient.getQueryData(["my-favorites"]);
+      const feedSnapshots = queryClient.getQueriesData<InfiniteData<Page<PostResponse>>>({
+        queryKey: ["feed"],
+      });
+      const userPostsSnapshots = queryClient.getQueriesData<InfiniteData<Page<PostResponse>>>({
+        queryKey: ["user-posts"],
+      });
+      const favoritesSnapshot = queryClient.getQueryData<InfiniteData<Page<PostResponse>>>(
+        ["my-favorites"],
+      );
       const userSnapshot = queryClient.getQueryData(["user", targetUserId]);
       const meSnapshot = queryClient.getQueryData(["me"]);
       const commentsSnapshots = new Map<string, unknown>();
@@ -76,12 +87,24 @@ export function useToggleFollow() {
         };
       };
 
-      queryClient.setQueryData(["feed"], patchPostsInCache);
-      queryClient.setQueryData(["my-favorites"], patchPostsInCache);
+      // Patch all feed-prefixed caches (covers ["feed","all"], ["feed","FAITH"], etc.)
+      for (const [key, old] of feedSnapshots) {
+        queryClient.setQueryData(key, patchPostsInCache(old));
+      }
 
-      const postQueriesData = queryClient.getQueriesData({
-        queryKey: ["post"],
-      });
+      // Patch my-favorites (single exact key — no prefix issue)
+      queryClient.setQueryData<InfiniteData<Page<PostResponse>>>(
+        ["my-favorites"],
+        patchPostsInCache,
+      );
+
+      // Patch all user-posts caches
+      for (const [key, old] of userPostsSnapshots) {
+        queryClient.setQueryData(key, patchPostsInCache(old));
+      }
+
+      // Patch all cached single-post entries whose author matches
+      const postQueriesData = queryClient.getQueriesData({ queryKey: ["post"] });
       for (const [queryKey, data] of postQueriesData) {
         queryClient.setQueryData<PostResponse>(queryKey, (old) => {
           if (!old || old.author.id !== targetUserId) return old;
@@ -92,9 +115,8 @@ export function useToggleFollow() {
         });
       }
 
-      const commentQueriesData = queryClient.getQueriesData({
-        queryKey: ["comments"],
-      });
+      // Patch all cached comment lists
+      const commentQueriesData = queryClient.getQueriesData({ queryKey: ["comments"] });
       for (const [queryKey, data] of commentQueriesData) {
         commentsSnapshots.set(JSON.stringify(queryKey), data);
         queryClient.setQueryData<InfiniteData<Page<CommentResponse>>>(
@@ -137,7 +159,8 @@ export function useToggleFollow() {
       );
 
       return {
-        feedSnapshot,
+        feedSnapshots,
+        userPostsSnapshots,
         favoritesSnapshot,
         userSnapshot,
         meSnapshot,
@@ -146,23 +169,22 @@ export function useToggleFollow() {
     },
 
     onError: (_err, { targetUserId }, ctx) => {
-      if (ctx?.feedSnapshot !== undefined) {
-        queryClient.setQueryData(["feed"], ctx.feedSnapshot);
+      if (!ctx) return;
+      for (const [key, data] of ctx.feedSnapshots) {
+        queryClient.setQueryData(key, data);
       }
-      if (ctx?.favoritesSnapshot !== undefined) {
-        queryClient.setQueryData(["my-favorites"], ctx.favoritesSnapshot);
+      for (const [key, data] of ctx.userPostsSnapshots) {
+        queryClient.setQueryData(key, data);
       }
-      if (ctx?.userSnapshot !== undefined) {
+      queryClient.setQueryData(["my-favorites"], ctx.favoritesSnapshot);
+      if (ctx.userSnapshot !== undefined) {
         queryClient.setQueryData(["user", targetUserId], ctx.userSnapshot);
       }
-      if (ctx?.meSnapshot !== undefined) {
+      if (ctx.meSnapshot !== undefined) {
         queryClient.setQueryData(["me"], ctx.meSnapshot);
       }
-      if (ctx?.commentsSnapshots) {
-        for (const [queryKeyStr, snapshot] of ctx.commentsSnapshots) {
-          const queryKey = JSON.parse(queryKeyStr);
-          queryClient.setQueryData(queryKey, snapshot);
-        }
+      for (const [queryKeyStr, snapshot] of ctx.commentsSnapshots) {
+        queryClient.setQueryData(JSON.parse(queryKeyStr), snapshot);
       }
     },
 

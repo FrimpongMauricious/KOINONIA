@@ -22,6 +22,24 @@ function patchCommentCount(
   };
 }
 
+function applyCommentCountDelta(
+  queryClient: ReturnType<typeof useQueryClient>,
+  postId: number,
+  delta: number,
+) {
+  for (const [key, old] of queryClient.getQueriesData<InfiniteData<Page<PostResponse>>>({
+    queryKey: ["feed"],
+  })) {
+    queryClient.setQueryData(key, patchCommentCount(old, postId, delta));
+  }
+
+  for (const [key, old] of queryClient.getQueriesData<InfiniteData<Page<PostResponse>>>({
+    queryKey: ["user-posts"],
+  })) {
+    queryClient.setQueryData(key, patchCommentCount(old, postId, delta));
+  }
+}
+
 export function useCreateComment(postId: number) {
   const queryClient = useQueryClient();
 
@@ -29,10 +47,7 @@ export function useCreateComment(postId: number) {
     mutationFn: (content) => createComment(postId, content),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["comments", postId] });
-      queryClient.setQueryData<InfiniteData<Page<PostResponse>>>(
-        ["feed"],
-        (old) => patchCommentCount(old, postId, 1),
-      );
+      applyCommentCountDelta(queryClient, postId, 1);
       queryClient.setQueryData<PostResponse>(
         ["post", postId],
         (old) => (old ? { ...old, commentCount: old.commentCount + 1 } : old),
@@ -48,13 +63,11 @@ export function useDeleteComment(postId: number) {
     mutationFn: (commentId) => deleteComment(commentId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["comments", postId] });
-      queryClient.setQueryData<InfiniteData<Page<PostResponse>>>(
-        ["feed"],
-        (old) => patchCommentCount(old, postId, -1),
-      );
+      applyCommentCountDelta(queryClient, postId, -1);
       queryClient.setQueryData<PostResponse>(
         ["post", postId],
-        (old) => (old ? { ...old, commentCount: Math.max(0, old.commentCount - 1) } : old),
+        (old) =>
+          old ? { ...old, commentCount: Math.max(0, old.commentCount - 1) } : old,
       );
     },
   });
