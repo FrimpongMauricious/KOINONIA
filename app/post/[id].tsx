@@ -1,3 +1,4 @@
+import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import {
@@ -141,9 +142,18 @@ export default function PostDetailScreen() {
 
             return (
               <View style={styles.commentRow}>
-                <View style={styles.commentAvatar}>
-                  <Text style={styles.commentAvatarText}>{initial}</Text>
-                </View>
+                {item.author.profilePictureUrl ? (
+                  <Image
+                    source={{ uri: item.author.profilePictureUrl }}
+                    style={styles.commentAvatar}
+                    contentFit="cover"
+                    transition={150}
+                  />
+                ) : (
+                  <View style={styles.commentAvatar}>
+                    <Text style={styles.commentAvatarText}>{initial}</Text>
+                  </View>
+                )}
                 <View style={styles.commentBody}>
                   <View style={styles.commentHeader}>
                     <Text style={styles.commentName}>{authorName}</Text>

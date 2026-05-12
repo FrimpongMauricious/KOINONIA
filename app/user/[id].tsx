@@ -1,4 +1,5 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { Image } from "expo-image";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
@@ -90,9 +91,18 @@ export default function CreatorProfileScreen() {
 
       {/* Avatar row — overlaps banner */}
       <View style={styles.avatarRow}>
-        <View style={styles.avatar}>
-          <Text style={styles.avatarInitial}>{initial}</Text>
-        </View>
+        {profile.profilePictureUrl ? (
+          <Image
+            source={{ uri: profile.profilePictureUrl }}
+            style={styles.avatar}
+            contentFit="cover"
+            transition={150}
+          />
+        ) : (
+          <View style={styles.avatar}>
+            <Text style={styles.avatarInitial}>{initial}</Text>
+          </View>
+        )}
 
         {!isOwnProfile && !isGuest && !isFollowing ? (
           <Pressable

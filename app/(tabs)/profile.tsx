@@ -1,4 +1,5 @@
 import { formatCount } from "@/src/utils/format";
+import { Image } from "expo-image";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { Link, useRouter } from "expo-router";
 import { useState } from "react";
@@ -114,9 +115,18 @@ export default function ProfileScreen() {
 
       {/* Avatar row — overlaps banner */}
       <View style={styles.avatarRow}>
-        <View style={styles.avatar}>
-          <Text style={styles.avatarInitial}>{initial}</Text>
-        </View>
+        {user?.profilePictureUrl ? (
+          <Image
+            source={{ uri: user.profilePictureUrl }}
+            style={styles.avatar}
+            contentFit="cover"
+            transition={150}
+          />
+        ) : (
+          <View style={styles.avatar}>
+            <Text style={styles.avatarInitial}>{initial}</Text>
+          </View>
+        )}
         <Link href="/edit-profile" asChild>
           <Pressable style={styles.editBtn}>
             <Text style={styles.editBtnText}>Edit profile</Text>

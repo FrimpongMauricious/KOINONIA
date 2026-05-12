@@ -1,5 +1,6 @@
 import { formatCount } from "@/src/utils/format";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { Image } from "expo-image";
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
@@ -75,9 +76,18 @@ export function PostCard({
             disabled={!onOpenAuthor}
             style={styles.avatarCol}
           >
-            <View style={styles.avatar}>
-              <Text style={styles.avatarText}>{authorInitial}</Text>
-            </View>
+            {post.author.profilePictureUrl ? (
+              <Image
+                source={post.author.profilePictureUrl}
+                style={styles.avatar}
+                contentFit="cover"
+                transition={150}
+              />
+            ) : (
+              <View style={styles.avatar}>
+                <Text style={styles.avatarText}>{authorInitial}</Text>
+              </View>
+            )}
           </Pressable>
 
           <View style={styles.contentCol}>
