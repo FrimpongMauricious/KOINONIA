@@ -215,6 +215,16 @@ export function PostCard({
                   }
                   color={post.favoritedByCurrentUser ? FAVORITE_ACTIVE : MUTED}
                 />
+                {post.favoriteCount >= 5 ? (
+                  <Text
+                    style={[
+                      styles.actionCount,
+                      post.favoritedByCurrentUser && { color: FAVORITE_ACTIVE },
+                    ]}
+                  >
+                    {formatCount(post.favoriteCount)}
+                  </Text>
+                ) : null}
               </Pressable>
 
               <View style={styles.action}>

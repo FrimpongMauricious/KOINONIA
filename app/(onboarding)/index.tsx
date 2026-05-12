@@ -94,25 +94,15 @@ export default function OnboardingScreen() {
     setCurrentIndex(index);
   }
 
-  async function handleSkip() {
+  async function handleComplete() {
     await auth.completeOnboarding();
     router.replace("/(auth)/login");
-  }
-
-  async function handleSignUp() {
-    await auth.completeOnboarding();
-    router.replace("/(auth)/register");
-  }
-
-  async function handleContinueAsGuest() {
-    await auth.completeOnboarding();
-    auth.continueAsGuest();
   }
 
   return (
     <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
       {/* Skip button */}
-      <Pressable style={styles.skipButton} onPress={handleSkip}>
+      <Pressable style={styles.skipButton} onPress={handleComplete}>
         <Text style={styles.skipText}>Skip</Text>
       </Pressable>
 
@@ -156,14 +146,9 @@ export default function OnboardingScreen() {
             <Text style={styles.arrowText}>›</Text>
           </Pressable>
         ) : (
-          <View style={styles.finalButtons}>
-            <Pressable style={styles.signUpButton} onPress={handleSignUp}>
-              <Text style={styles.signUpText}>Sign Up</Text>
-            </Pressable>
-            <Pressable style={styles.guestButton} onPress={handleContinueAsGuest}>
-              <Text style={styles.guestText}>Guest</Text>
-            </Pressable>
-          </View>
+          <Pressable style={styles.getStartedButton} onPress={handleComplete}>
+            <Text style={styles.getStartedText}>Get Started</Text>
+          </Pressable>
         )}
       </View>
     </View>
@@ -177,7 +162,7 @@ const styles = StyleSheet.create({
   },
   skipButton: {
     position: "absolute",
-    top: 16,
+    top: 24,
     right: 20,
     zIndex: 10,
     paddingVertical: 6,
@@ -258,37 +243,18 @@ const styles = StyleSheet.create({
     height: 10,
     borderRadius: 5,
   },
-  finalButtons: {
-    flexDirection: "column",
-    alignItems: "center",
-    gap: 6,
-    width: 100,
-  },
-  signUpButton: {
+  getStartedButton: {
     backgroundColor: "#1D9BF0",
-    borderRadius: 20,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    width: "100%",
+    borderRadius: 24,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
     alignItems: "center",
+    justifyContent: "center",
+    minWidth: 120,
   },
-  signUpText: {
+  getStartedText: {
     color: "#fff",
-    fontWeight: "600",
-    fontSize: 14,
-  },
-  guestButton: {
-    borderWidth: 1,
-    borderColor: "#444",
-    borderRadius: 20,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    width: "100%",
-    alignItems: "center",
-  },
-  guestText: {
-    color: "#aaa",
-    fontWeight: "500",
-    fontSize: 14,
+    fontWeight: "700",
+    fontSize: 15,
   },
 });

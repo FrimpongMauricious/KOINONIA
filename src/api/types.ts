@@ -60,6 +60,7 @@ export type PostResponse = {
   commentCount: number;
   repostCount: number;
   viewCount: number;
+  favoriteCount: number;
   likedByCurrentUser: boolean;
   repostedByCurrentUser: boolean;
   favoritedByCurrentUser: boolean;
