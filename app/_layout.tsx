@@ -25,19 +25,32 @@ export const unstable_settings = {
 };
 
 function RootLayoutInner() {
-  const { status } = useAuth();
+  const { status, hasOnboarded } = useAuth();
   const router = useRouter();
   const segments = useSegments();
 
   useEffect(() => {
     if (status === "loading") return;
+
+    const isLoggedInOrGuest = status === "authenticated" || status === "guest";
+    const inOnboardingGroup = segments[0] === "(onboarding)";
     const inAuthGroup = segments[0] === "(auth)";
-    if (status === "unauthenticated" && !inAuthGroup) {
-      router.replace("/(auth)/login");
-    } else if ((status === "authenticated" || status === "guest") && inAuthGroup) {
+
+    if (isLoggedInOrGuest && (inAuthGroup || inOnboardingGroup)) {
       router.replace("/(tabs)");
+      return;
     }
-  }, [status, segments]);
+
+    if (status === "unauthenticated" && !hasOnboarded && !inOnboardingGroup) {
+      router.replace("/(onboarding)");
+      return;
+    }
+
+    if (status === "unauthenticated" && hasOnboarded && !inAuthGroup) {
+      router.replace("/(auth)/login");
+      return;
+    }
+  }, [status, hasOnboarded, segments]);
 
   if (status === "loading") {
     return (
@@ -51,6 +64,7 @@ function RootLayoutInner() {
     <Stack>
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+      <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
       <Stack.Screen name="post/[id]" options={{ title: "Post" }} />
       <Stack.Screen name="user/[id]" options={{ title: "Creator" }} />
       <Stack.Screen name="edit-profile" options={{ title: "Edit Profile" }} />

@@ -11,6 +11,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { fetchMe, login as apiLogin, register as apiRegister } from "@/src/api/auth";
 import { LoginRequest, RegisterRequest, UserProfileResponse } from "@/src/api/types";
 import { clearToken, getToken, saveToken } from "@/src/auth/token-storage";
+import { hasCompletedOnboarding, markOnboardingComplete } from "@/src/storage/onboarding-storage";
 
 type AuthStatus = "loading" | "authenticated" | "unauthenticated" | "guest";
 
@@ -18,12 +19,14 @@ type AuthContextValue = {
   status: AuthStatus;
   user: UserProfileResponse | null;
   isGuest: boolean;
+  hasOnboarded: boolean;
   login: (data: LoginRequest) => Promise<void>;
   register: (data: RegisterRequest) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
   continueAsGuest: () => void;
   exitGuestMode: () => void;
+  completeOnboarding: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -31,11 +34,16 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<AuthStatus>("loading");
   const [user, setUser] = useState<UserProfileResponse | null>(null);
+  const [hasOnboarded, setHasOnboarded] = useState(false);
   const queryClient = useQueryClient();
 
   useEffect(() => {
     async function bootstrap() {
-      const token = await getToken();
+      const [token, onboarded] = await Promise.all([
+        getToken(),
+        hasCompletedOnboarding(),
+      ]);
+      setHasOnboarded(onboarded);
       if (!token) {
         setStatus("unauthenticated");
         return;
@@ -90,18 +98,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setStatus("unauthenticated");
   }, []);
 
+  const completeOnboarding = useCallback(async () => {
+    await markOnboardingComplete();
+    setHasOnboarded(true);
+  }, []);
+
   return (
     <AuthContext.Provider
       value={{
         status,
         user,
         isGuest: status === "guest",
+        hasOnboarded,
         login,
         register,
         logout,
         refreshUser,
         continueAsGuest,
         exitGuestMode,
+        completeOnboarding,
       }}
     >
       {children}
