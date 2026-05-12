@@ -4,6 +4,7 @@ import { Modal, Pressable, StyleSheet, Text, TextInput, View } from "react-nativ
 
 import { ScreenContainer } from "@/components/screen-container";
 import { ThemedText } from "@/components/themed-text";
+import { ThemedView } from "@/components/themed-view";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useAuth } from "@/src/auth/auth-context";
 import { Topic, TOPIC_DISPLAY_NAMES, USER_FACING_TOPICS } from "@/src/api/types";
@@ -19,8 +20,7 @@ export default function ComposeScreen() {
   const [content, setContent] = useState("");
   const [topicModalVisible, setTopicModalVisible] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const { status } = useAuth();
-  const isGuest = status !== "authenticated";
+  const { isGuest, exitGuestMode } = useAuth();
   const createPost = useCreatePost();
 
   const charactersLeft = useMemo(
@@ -53,18 +53,38 @@ export default function ComposeScreen() {
     }
   };
 
+  if (isGuest) {
+    return (
+      <ScreenContainer contentStyle={styles.container}>
+        <ThemedView style={styles.guestContainer}>
+          <Text style={styles.guestTitle}>Share your faith</Text>
+          <ThemedText style={styles.guestBody}>
+            Sign up to start posting on Koinonia.
+          </ThemedText>
+          <Pressable
+            style={styles.guestPrimaryBtn}
+            onPress={() => { exitGuestMode(); router.replace("/(auth)/register"); }}
+          >
+            <Text style={styles.guestPrimaryBtnText}>Sign Up</Text>
+          </Pressable>
+          <Pressable
+            style={styles.guestSecondaryBtn}
+            onPress={() => { exitGuestMode(); router.replace("/(auth)/login"); }}
+          >
+            <Text style={styles.guestSecondaryBtnText}>Log In</Text>
+          </Pressable>
+        </ThemedView>
+      </ScreenContainer>
+    );
+  }
+
   return (
     <ScreenContainer scroll keyboardAvoiding contentStyle={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>New Post</Text>
       </View>
 
-      {isGuest ? (
-        <ThemedText style={styles.guestText}>
-          Guest users cannot create posts. Sign in to continue.
-        </ThemedText>
-      ) : (
-        <View style={styles.inner}>
+      <View style={styles.inner}>
           <TextInput
             style={styles.titleInput}
             placeholder="Add a title (optional)"
@@ -121,8 +141,7 @@ export default function ComposeScreen() {
               {createPost.isPending ? "Publishing…" : "Publish"}
             </Text>
           </Pressable>
-        </View>
-      )}
+      </View>
 
       <Modal
         visible={topicModalVisible}
@@ -172,6 +191,51 @@ const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
   },
+  guestContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 32,
+    gap: 16,
+  },
+  guestTitle: {
+    color: "#E7E9EA",
+    fontSize: 24,
+    fontWeight: "800",
+    textAlign: "center",
+  },
+  guestBody: {
+    color: "#71767B",
+    fontSize: 15,
+    textAlign: "center",
+    lineHeight: 22,
+  },
+  guestPrimaryBtn: {
+    width: "100%",
+    backgroundColor: "#1D9BF0",
+    borderRadius: 24,
+    paddingVertical: 13,
+    alignItems: "center",
+    marginTop: 8,
+  },
+  guestPrimaryBtnText: {
+    color: "#FFFFFF",
+    fontWeight: "700",
+    fontSize: 15,
+  },
+  guestSecondaryBtn: {
+    width: "100%",
+    borderWidth: 1,
+    borderColor: "#2F3336",
+    borderRadius: 24,
+    paddingVertical: 13,
+    alignItems: "center",
+  },
+  guestSecondaryBtnText: {
+    color: "#E7E9EA",
+    fontWeight: "600",
+    fontSize: 15,
+  },
   header: {
     paddingHorizontal: 16,
     paddingTop: 16,
@@ -187,9 +251,6 @@ const styles = StyleSheet.create({
   inner: {
     padding: 16,
     gap: 12,
-  },
-  guestText: {
-    padding: 16,
   },
   titleInput: {
     backgroundColor: "#16181C",

@@ -11,10 +11,12 @@ export function NotificationBell({ size = 23 }: { size?: number }) {
   const router = useRouter();
   const { status } = useAuth();
   const { count } = useUnreadCount(status === "authenticated");
-
-  const badgeLabel = count > 9 ? "9+" : String(count);
   const colorScheme = useColorScheme();
   const palette = Colors[colorScheme ?? "light"];
+
+  if (status !== "authenticated") return null;
+
+  const badgeLabel = count > 9 ? "9+" : String(count);
 
   return (
     <Pressable

@@ -7,6 +7,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { PostResponse, TOPIC_DISPLAY_NAMES } from "@/src/api/types";
 import { useAuth } from "@/src/auth/auth-context";
+import { GuestUpgradeModal } from "@/src/features/auth/components/guest-upgrade-modal";
 import { useToggleFollow } from "@/src/features/follows/hooks/use-follow-mutations";
 import { PostAuthorMenu } from "./post-author-menu";
 
@@ -43,7 +44,7 @@ export function PostCard({
   onToggleRepost,
   onToggleFavorite,
 }: PostCardProps) {
-  const { user } = useAuth();
+  const { user, isGuest } = useAuth();
 
   const isLiked = post.likedByCurrentUser;
   const isReshared = post.repostedByCurrentUser;
@@ -54,8 +55,10 @@ export function PostCard({
 
   const toggleFollow = useToggleFollow();
   const [menuVisible, setMenuVisible] = useState(false);
+  const [guestAction, setGuestAction] = useState<string | null>(null);
 
   const handleFollow = () => {
+    if (isGuest) { setGuestAction("follow people"); return; }
     toggleFollow.mutate({
       targetUserId: post.author.id,
       currentlyFollowing: post.author.followedByCurrentUser,
@@ -63,8 +66,29 @@ export function PostCard({
   };
 
   const handleUnfollow = () => {
-    handleFollow();
+    toggleFollow.mutate({
+      targetUserId: post.author.id,
+      currentlyFollowing: post.author.followedByCurrentUser,
+    });
     setMenuVisible(false);
+  };
+
+  const handleLike = () => {
+    if (isGuest) { setGuestAction("like posts"); return; }
+    if (!canLike || !onToggleLike) return;
+    onToggleLike();
+  };
+
+  const handleRepost = () => {
+    if (isGuest) { setGuestAction("repost"); return; }
+    if (!canRepost || !onToggleRepost) return;
+    onToggleRepost();
+  };
+
+  const handleFavorite = () => {
+    if (isGuest) { setGuestAction("save posts"); return; }
+    if (!canFavorite || !onToggleFavorite) return;
+    onToggleFavorite();
   };
 
   return (
@@ -106,7 +130,7 @@ export function PostCard({
                 </Text>
               </Pressable>
 
-              {!isOwnPost && user && !post.author.followedByCurrentUser ? (
+              {!isOwnPost && !post.author.followedByCurrentUser && (user || isGuest) ? (
                 <Pressable
                   style={styles.followBtn}
                   onPress={handleFollow}
@@ -151,11 +175,7 @@ export function PostCard({
                 </Text>
               </Pressable>
 
-              <Pressable
-                onPress={onToggleRepost}
-                style={styles.action}
-                disabled={!canRepost || !onToggleRepost}
-              >
+              <Pressable onPress={handleRepost} style={styles.action}>
                 <IconSymbol
                   size={18}
                   name="arrow.2.squarepath"
@@ -171,11 +191,7 @@ export function PostCard({
                 </Text>
               </Pressable>
 
-              <Pressable
-                onPress={onToggleLike}
-                style={styles.action}
-                disabled={!canLike || !onToggleLike}
-              >
+              <Pressable onPress={handleLike} style={styles.action}>
                 <IconSymbol
                   size={18}
                   name={isLiked ? "heart.fill" : "heart"}
@@ -191,11 +207,7 @@ export function PostCard({
                 </Text>
               </Pressable>
 
-              <Pressable
-                onPress={onToggleFavorite}
-                style={styles.action}
-                disabled={!canFavorite || !onToggleFavorite}
-              >
+              <Pressable onPress={handleFavorite} style={styles.action}>
                 <IconSymbol
                   size={18}
                   name={
@@ -225,6 +237,12 @@ export function PostCard({
         authorUsername={post.author.username}
         onUnfollow={handleUnfollow}
         onClose={() => setMenuVisible(false)}
+      />
+
+      <GuestUpgradeModal
+        visible={guestAction !== null}
+        action={guestAction ?? ""}
+        onClose={() => setGuestAction(null)}
       />
     </>
   );

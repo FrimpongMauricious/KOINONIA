@@ -2,14 +2,15 @@ import { useRouter } from "expo-router";
 import {
     ActivityIndicator,
     FlatList,
+    Pressable,
     StyleSheet,
     Text,
     View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
+import { ThemedText } from "@/components/themed-text";
 import { useAuth } from "@/src/auth/auth-context";
 import { useFavorites } from "@/src/features/favorites/hooks/use-favorites";
 import { PostCard } from "@/src/features/feed/components/post-card";
@@ -21,8 +22,7 @@ import {
 
 export default function FavoritesScreen() {
   const router = useRouter();
-  const { status } = useAuth();
-  const isGuest = status !== "authenticated";
+  const { isGuest, exitGuestMode } = useAuth();
 
   const {
     posts,
@@ -46,9 +46,24 @@ export default function FavoritesScreen() {
         </View>
 
         {isGuest ? (
-          <ThemedText style={styles.guestText}>
-            Bookmarks are available for registered users only.
-          </ThemedText>
+          <View style={styles.guestBody}>
+            <Text style={styles.guestTitle}>Save your favourite posts</Text>
+            <ThemedText style={styles.guestSub}>
+              Sign up to bookmark posts and read them anytime.
+            </ThemedText>
+            <Pressable
+              style={styles.primaryBtn}
+              onPress={() => { router.replace("/(auth)/register"); exitGuestMode(); }}
+            >
+              <Text style={styles.primaryBtnText}>Sign Up</Text>
+            </Pressable>
+            <Pressable
+              style={styles.outlineBtn}
+              onPress={() => { router.replace("/(auth)/login"); exitGuestMode(); }}
+            >
+              <Text style={styles.outlineBtnText}>Log In</Text>
+            </Pressable>
+          </View>
         ) : isLoading ? (
           <ActivityIndicator
             style={styles.loader}
@@ -128,9 +143,50 @@ const styles = StyleSheet.create({
   loader: {
     flex: 1,
   },
-  guestText: {
-    paddingHorizontal: 16,
-    marginTop: 24,
+  guestBody: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 32,
+    gap: 14,
+  },
+  guestTitle: {
+    color: "#E7E9EA",
+    fontSize: 22,
+    fontWeight: "800",
+    textAlign: "center",
+  },
+  guestSub: {
+    color: "#71767B",
+    fontSize: 15,
+    textAlign: "center",
+    lineHeight: 22,
+    marginBottom: 4,
+  },
+  primaryBtn: {
+    width: "100%",
+    backgroundColor: "#1D9BF0",
+    borderRadius: 24,
+    paddingVertical: 13,
+    alignItems: "center",
+  },
+  primaryBtnText: {
+    color: "#FFFFFF",
+    fontWeight: "700",
+    fontSize: 15,
+  },
+  outlineBtn: {
+    width: "100%",
+    borderWidth: 1,
+    borderColor: "#2F3336",
+    borderRadius: 24,
+    paddingVertical: 13,
+    alignItems: "center",
+  },
+  outlineBtnText: {
+    color: "#E7E9EA",
+    fontWeight: "600",
+    fontSize: 15,
   },
   emptyText: {
     textAlign: "center",

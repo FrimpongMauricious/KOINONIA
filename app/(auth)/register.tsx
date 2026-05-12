@@ -3,11 +3,12 @@ import { useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
 import { ScreenContainer } from "@/components/screen-container";
+import { ThemedText } from "@/components/themed-text";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useAuth } from "@/src/auth/auth-context";
 
 export default function RegisterScreen() {
-  const { register } = useAuth();
+  const { register, continueAsGuest } = useAuth();
 
   const [username, setUsername] = useState("");
   const [displayName, setDisplayName] = useState("");
@@ -99,6 +100,17 @@ export default function RegisterScreen() {
         <Link href="/(auth)/login">
           <Text style={styles.linkText}>Already have an account? <Text style={styles.linkAccent}>Log in</Text></Text>
         </Link>
+
+        <View style={styles.separatorRow}>
+          <View style={styles.separatorLine} />
+          <ThemedText style={styles.separatorText}>or</ThemedText>
+          <View style={styles.separatorLine} />
+        </View>
+
+        <Pressable onPress={continueAsGuest}>
+          <Text style={styles.guestLink}>Continue as guest</Text>
+        </Pressable>
+        <Text style={styles.guestHint}>Guests can only read posts</Text>
       </View>
     </ScreenContainer>
   );
@@ -190,5 +202,31 @@ const styles = StyleSheet.create({
     fontSize: 13,
     textAlign: "center",
     width: "100%",
+  },
+  separatorRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    width: "100%",
+    gap: 10,
+  },
+  separatorLine: {
+    flex: 1,
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: "#2F3336",
+  },
+  separatorText: {
+    color: "#71767B",
+    fontSize: 13,
+  },
+  guestLink: {
+    color: "#1D9BF0",
+    fontSize: 14,
+    textAlign: "center",
+  },
+  guestHint: {
+    color: "#71767B",
+    fontSize: 12,
+    textAlign: "center",
+    marginTop: -8,
   },
 });

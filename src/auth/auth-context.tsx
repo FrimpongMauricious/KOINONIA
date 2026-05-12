@@ -6,20 +6,24 @@ import {
   useEffect,
   useState,
 } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { fetchMe, login as apiLogin, register as apiRegister } from "@/src/api/auth";
 import { LoginRequest, RegisterRequest, UserProfileResponse } from "@/src/api/types";
 import { clearToken, getToken, saveToken } from "@/src/auth/token-storage";
 
-type AuthStatus = "loading" | "authenticated" | "unauthenticated";
+type AuthStatus = "loading" | "authenticated" | "unauthenticated" | "guest";
 
 type AuthContextValue = {
   status: AuthStatus;
   user: UserProfileResponse | null;
+  isGuest: boolean;
   login: (data: LoginRequest) => Promise<void>;
   register: (data: RegisterRequest) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
+  continueAsGuest: () => void;
+  exitGuestMode: () => void;
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -27,6 +31,7 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<AuthStatus>("loading");
   const [user, setUser] = useState<UserProfileResponse | null>(null);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     async function bootstrap() {
@@ -51,17 +56,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const auth = await apiLogin(data);
     await saveToken(auth.token);
     const me = await fetchMe();
+    queryClient.clear();
     setUser(me);
     setStatus("authenticated");
-  }, []);
+  }, [queryClient]);
 
   const register = useCallback(async (data: RegisterRequest) => {
     const auth = await apiRegister(data);
     await saveToken(auth.token);
     const me = await fetchMe();
+    queryClient.clear();
     setUser(me);
     setStatus("authenticated");
-  }, []);
+  }, [queryClient]);
 
   const logout = useCallback(async () => {
     await clearToken();
@@ -74,8 +81,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(me);
   }, []);
 
+  const continueAsGuest = useCallback(() => {
+    setUser(null);
+    setStatus("guest");
+  }, []);
+
+  const exitGuestMode = useCallback(() => {
+    setStatus("unauthenticated");
+  }, []);
+
   return (
-    <AuthContext.Provider value={{ status, user, login, register, logout, refreshUser }}>
+    <AuthContext.Provider
+      value={{
+        status,
+        user,
+        isGuest: status === "guest",
+        login,
+        register,
+        logout,
+        refreshUser,
+        continueAsGuest,
+        exitGuestMode,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

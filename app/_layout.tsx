@@ -34,7 +34,7 @@ function RootLayoutInner() {
     const inAuthGroup = segments[0] === "(auth)";
     if (status === "unauthenticated" && !inAuthGroup) {
       router.replace("/(auth)/login");
-    } else if (status === "authenticated" && inAuthGroup) {
+    } else if ((status === "authenticated" || status === "guest") && inAuthGroup) {
       router.replace("/(tabs)");
     }
   }, [status, segments]);

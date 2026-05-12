@@ -17,6 +17,7 @@ import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { fetchUserPosts } from "@/src/api/users";
 import { useAuth } from "@/src/auth/auth-context";
+import { GuestUpgradeModal } from "@/src/features/auth/components/guest-upgrade-modal";
 import { PostAuthorMenu } from "@/src/features/feed/components/post-author-menu";
 import { PostCard } from "@/src/features/feed/components/post-card";
 import {
@@ -35,9 +36,9 @@ export default function CreatorProfileScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const numericId = parseInt(id ?? "0", 10);
   const router = useRouter();
-  const { user } = useAuth();
-  const isGuest = !user;
+  const { user, isGuest } = useAuth();
   const [menuVisible, setMenuVisible] = useState(false);
+  const [guestModalVisible, setGuestModalVisible] = useState(false);
 
   const {
     data: profile,
@@ -104,15 +105,16 @@ export default function CreatorProfileScreen() {
           </View>
         )}
 
-        {!isOwnProfile && !isGuest && !isFollowing ? (
+        {!isOwnProfile && !isFollowing ? (
           <Pressable
             style={styles.followBtn}
-            onPress={() =>
+            onPress={() => {
+              if (isGuest) { setGuestModalVisible(true); return; }
               toggleFollow.mutate({
                 targetUserId: numericId,
                 currentlyFollowing: isFollowing,
-              })
-            }
+              });
+            }}
             disabled={toggleFollow.isPending}
           >
             <Text style={styles.followBtnText}>Follow</Text>
@@ -234,6 +236,12 @@ export default function CreatorProfileScreen() {
             setMenuVisible(false);
           }}
           onClose={() => setMenuVisible(false)}
+        />
+
+        <GuestUpgradeModal
+          visible={guestModalVisible}
+          action="follow people"
+          onClose={() => setGuestModalVisible(false)}
         />
       </ThemedView>
     </SafeAreaView>

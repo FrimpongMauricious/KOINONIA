@@ -33,8 +33,7 @@ const AVATAR_SIZE = 76;
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { user, status, logout, refreshUser } = useAuth();
-  const isGuest = status !== "authenticated";
+  const { user, isGuest, logout, refreshUser, exitGuestMode } = useAuth();
 
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [deletePassword, setDeletePassword] = useState("");
@@ -91,16 +90,18 @@ export default function ProfileScreen() {
           <Text style={styles.guestSub}>
             Sign in to share insights and connect with the community.
           </Text>
-          <Link href="/(auth)/login" asChild>
-            <Pressable style={styles.primaryBtn}>
-              <Text style={styles.primaryBtnText}>Log in</Text>
-            </Pressable>
-          </Link>
-          <Link href="/(auth)/register" asChild>
-            <Pressable style={styles.outlineBtn}>
-              <Text style={styles.outlineBtnText}>Create account</Text>
-            </Pressable>
-          </Link>
+          <Pressable
+            style={styles.primaryBtn}
+            onPress={() => { router.replace("/(auth)/login"); exitGuestMode(); }}
+          >
+            <Text style={styles.primaryBtnText}>Log in</Text>
+          </Pressable>
+          <Pressable
+            style={styles.outlineBtn}
+            onPress={() => { router.replace("/(auth)/register"); exitGuestMode(); }}
+          >
+            <Text style={styles.outlineBtnText}>Create account</Text>
+          </Pressable>
         </View>
       </ThemedView>
     );
