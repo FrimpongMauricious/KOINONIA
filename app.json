@@ -1,15 +1,15 @@
 {
   "expo": {
-    "name": "koinonia",
+    "name": "Koinonia",
     "slug": "koinonia",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/koinonia_logo.png",
+    "icon": "./assets/images/koinonia_icon_1024.png",
     "scheme": "koinonia",
     "userInterfaceStyle": "dark",
-    "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.koinonia.app"
     },
     "androidStatusBar": {
       "barStyle": "light-content",
@@ -17,25 +17,24 @@
       "translucent": false
     },
     "android": {
+      "package": "com.koinonia.app",
       "adaptiveIcon": {
         "backgroundColor": "#000000",
-        "foregroundImage": "./assets/images/koinonia_logo.png",
-        "backgroundImage": "./assets/images/koinonia_logo.png",
-        "monochromeImage": "./assets/images/koinonia_logo.png"
+        "foregroundImage": "./assets/images/koinonia_icon_1024.png",
+        "monochromeImage": "./assets/images/koinonia_icon_1024.png"
       },
-      "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
     },
     "web": {
       "output": "static",
-      "favicon": "./assets/images/koinonia_logo.png"
+      "favicon": "./assets/images/koinonia_icon_1024.png"
     },
     "plugins": [
       "expo-router",
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/koinonia_logo.png",
+          "image": "./assets/images/koinonia_icon_1024.png",
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#000000",
