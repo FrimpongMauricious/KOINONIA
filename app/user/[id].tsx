@@ -27,6 +27,7 @@ import {
 } from "@/src/features/feed/hooks/use-post-mutations";
 import { useToggleFollow } from "@/src/features/follows/hooks/use-follow-mutations";
 import { useUserProfile } from "@/src/features/profile/hooks/use-user-profile";
+import { StreakBadge } from "@/src/features/streak/components/streak-badge";
 import { formatCount } from "@/src/utils/format";
 
 const BANNER_HEIGHT = 130;
@@ -162,7 +163,17 @@ export default function CreatorProfileScreen() {
             </Text>
             <Text style={styles.statLabel}> Likes</Text>
           </View>
+          {(profile.currentStreak ?? 0) >= 1 ? (
+            <View style={[styles.statItem, { marginLeft: 18 }]}>
+              <StreakBadge streak={profile.currentStreak} size="small" />
+            </View>
+          ) : null}
         </View>
+        {(profile.longestStreak ?? 0) > 0 ? (
+          <Text style={styles.longestStreak}>
+            Longest streak: {profile.longestStreak} days
+          </Text>
+        ) : null}
       </View>
 
       {/* Posts tab indicator */}
@@ -352,6 +363,11 @@ const styles = StyleSheet.create({
   statLabel: {
     color: "#71767B",
     fontSize: 15,
+  },
+  longestStreak: {
+    color: "#71767B",
+    fontSize: 13,
+    marginTop: 4,
   },
 
   /* ── Posts tab bar ── */

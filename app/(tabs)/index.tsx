@@ -18,6 +18,8 @@ import {
     useToggleLike,
     useToggleRepost,
 } from "@/src/features/feed/hooks/use-post-mutations";
+import { StreakBadge } from "@/src/features/streak/components/streak-badge";
+import { useMyStreak } from "@/src/features/streak/hooks/use-streak";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function HomeScreen() {
@@ -35,6 +37,9 @@ export default function HomeScreen() {
     isFetchingNextPage,
   } = useFeed();
 
+  const { data: streakData } = useMyStreak();
+  const currentStreak = streakData?.currentStreak ?? 0;
+
   const toggleLike = useToggleLike();
   const toggleRepost = useToggleRepost();
   const toggleFavorite = useToggleFavorite();
@@ -43,9 +48,16 @@ export default function HomeScreen() {
     <SafeAreaView style={styles.container} edges={["top"]}>
       <ThemedView style={styles.container}>
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Koinonia</Text>
-          <NotificationBell />
-          {isGuest ? <Text style={styles.guestBadge}>Guest</Text> : null}
+          <View style={styles.headerRow}>
+            <Text style={styles.headerTitle}>Koinonia</Text>
+            <NotificationBell />
+            {isGuest ? <Text style={styles.guestBadge}>Guest</Text> : null}
+          </View>
+          {currentStreak >= 1 ? (
+            <View style={styles.streakRow}>
+              <StreakBadge streak={currentStreak} size="large" />
+            </View>
+          ) : null}
         </View>
 
         {isLoading ? (
@@ -110,14 +122,20 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
     paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: "#2F3336",
+    gap: 6,
+  },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  streakRow: {
+    paddingLeft: 2,
   },
   headerTitle: {
     color: "#E7E9EA",

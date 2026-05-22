@@ -13,6 +13,14 @@ export type UserProfileResponse = UserResponse & {
   followingCount: number;
   followedByCurrentUser: boolean;
   totalLikes: number;
+  currentStreak: number;
+  longestStreak: number;
+};
+
+export type UserStreakResponse = {
+  currentStreak: number;
+  longestStreak: number;
+  lastActivityDate: string | null;
 };
 
 export type AuthResponse = {
@@ -95,6 +103,8 @@ export type PublicUserProfileResponse = {
   followingCount: number;
   followedByCurrentUser: boolean;
   totalLikes: number;
+  currentStreak: number;
+  longestStreak: number;
 };
 
 export type CommentResponse = {

@@ -20,6 +20,7 @@ import { ThemedView } from "@/components/themed-view";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { deleteMyAccount, fetchUserPosts } from "@/src/api/users";
 import { useAuth } from "@/src/auth/auth-context";
+import { StreakBadge } from "@/src/features/streak/components/streak-badge";
 import { PostCard } from "@/src/features/feed/components/post-card";
 import {
     useToggleFavorite,
@@ -167,7 +168,17 @@ export default function ProfileScreen() {
             </Text>
             <Text style={styles.statLabel}> Likes</Text>
           </Pressable>
+          {(user?.currentStreak ?? 0) >= 1 ? (
+            <View style={[styles.statItem, { marginLeft: 18 }]}>
+              <StreakBadge streak={user!.currentStreak} size="small" />
+            </View>
+          ) : null}
         </View>
+        {(user?.longestStreak ?? 0) > 0 ? (
+          <Text style={styles.longestStreak}>
+            Longest streak: {user!.longestStreak} days
+          </Text>
+        ) : null}
 
         {/* Secondary account actions */}
         <View style={styles.accountActions}>
@@ -438,6 +449,11 @@ const styles = StyleSheet.create({
   statLabel: {
     color: "#71767B",
     fontSize: 15,
+  },
+  longestStreak: {
+    color: "#71767B",
+    fontSize: 13,
+    marginTop: 4,
   },
 
   /* ── Secondary actions (logout / delete) ── */
