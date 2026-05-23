@@ -5,7 +5,7 @@ import { CommentLikeResponse, CommentResponse, Page } from "@/src/api/types";
 
 type CommentsCache = InfiniteData<Page<CommentResponse>> | undefined;
 
-function patchComment(
+function patchCommentInCache(
   old: CommentsCache,
   commentId: number,
   updater: (c: CommentResponse) => CommentResponse,
@@ -20,6 +20,38 @@ function patchComment(
   };
 }
 
+function patchAllCommentCaches(
+  queryClient: ReturnType<typeof useQueryClient>,
+  commentId: number,
+  updater: (c: CommentResponse) => CommentResponse,
+) {
+  for (const [key, old] of queryClient.getQueriesData<CommentsCache>({ queryKey: ["comments"] })) {
+    queryClient.setQueryData<CommentsCache>(key, patchCommentInCache(old, commentId, updater));
+  }
+  for (const [key, old] of queryClient.getQueriesData<CommentsCache>({ queryKey: ["replies"] })) {
+    queryClient.setQueryData<CommentsCache>(key, patchCommentInCache(old, commentId, updater));
+  }
+}
+
+function snapshotAllCommentCaches(queryClient: ReturnType<typeof useQueryClient>) {
+  return {
+    comments: queryClient.getQueriesData<CommentsCache>({ queryKey: ["comments"] }),
+    replies: queryClient.getQueriesData<CommentsCache>({ queryKey: ["replies"] }),
+  };
+}
+
+function restoreAllCommentCaches(
+  queryClient: ReturnType<typeof useQueryClient>,
+  snapshot: ReturnType<typeof snapshotAllCommentCaches>,
+) {
+  for (const [key, data] of snapshot.comments) {
+    queryClient.setQueryData(key, data);
+  }
+  for (const [key, data] of snapshot.replies) {
+    queryClient.setQueryData(key, data);
+  }
+}
+
 export function useToggleCommentLike(postId: number) {
   const queryClient = useQueryClient();
 
@@ -27,7 +59,7 @@ export function useToggleCommentLike(postId: number) {
     CommentLikeResponse,
     Error,
     CommentResponse,
-    { snapshot: CommentsCache }
+    { snapshot: ReturnType<typeof snapshotAllCommentCaches> }
   >({
     mutationFn: (comment) =>
       comment.likedByCurrentUser
@@ -35,38 +67,32 @@ export function useToggleCommentLike(postId: number) {
         : likeComment(comment.id),
 
     onMutate: async (comment) => {
-      await queryClient.cancelQueries({ queryKey: ["comments", postId] });
-      const snapshot = queryClient.getQueryData<CommentsCache>(["comments", postId]);
+      await queryClient.cancelQueries({ queryKey: ["comments"] });
+      await queryClient.cancelQueries({ queryKey: ["replies"] });
 
-      queryClient.setQueryData<CommentsCache>(
-        ["comments", postId],
-        (old) =>
-          patchComment(old, comment.id, (c) => ({
-            ...c,
-            likedByCurrentUser: !c.likedByCurrentUser,
-            likeCount: c.likedByCurrentUser ? c.likeCount - 1 : c.likeCount + 1,
-          })),
-      );
+      const snapshot = snapshotAllCommentCaches(queryClient);
+
+      patchAllCommentCaches(queryClient, comment.id, (c) => ({
+        ...c,
+        likedByCurrentUser: !c.likedByCurrentUser,
+        likeCount: c.likedByCurrentUser ? c.likeCount - 1 : c.likeCount + 1,
+      }));
 
       return { snapshot };
     },
 
     onError: (_err, _comment, ctx) => {
-      if (ctx?.snapshot !== undefined) {
-        queryClient.setQueryData(["comments", postId], ctx.snapshot);
+      if (ctx?.snapshot) {
+        restoreAllCommentCaches(queryClient, ctx.snapshot);
       }
     },
 
     onSuccess: (serverResponse, comment) => {
-      queryClient.setQueryData<CommentsCache>(
-        ["comments", postId],
-        (old) =>
-          patchComment(old, comment.id, (c) => ({
-            ...c,
-            likedByCurrentUser: serverResponse.likedByCurrentUser,
-            likeCount: serverResponse.likeCount,
-          })),
-      );
+      patchAllCommentCaches(queryClient, comment.id, (c) => ({
+        ...c,
+        likedByCurrentUser: serverResponse.likedByCurrentUser,
+        likeCount: serverResponse.likeCount,
+      }));
     },
   });
 }
