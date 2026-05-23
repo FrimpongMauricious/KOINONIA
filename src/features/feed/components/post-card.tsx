@@ -1,8 +1,10 @@
-import { formatCount } from "@/src/utils/format";
+import { formatCount, formatRelativeTime } from "@/src/utils/format";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Image } from "expo-image";
-import { useState } from "react";
+import * as Sharing from "expo-sharing";
+import { useRef, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import ViewShot from "react-native-view-shot";
 
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { PostResponse, TOPIC_DISPLAY_NAMES } from "@/src/api/types";
@@ -18,6 +20,7 @@ const MUTED = "#71767B";
 const TEXT = "#E7E9EA";
 const BORDER = "#2F3336";
 const AVATAR_BG = "#1D9BF0";
+const BG = "#000000";
 
 interface PostCardProps {
   post: PostResponse;
@@ -57,6 +60,8 @@ export function PostCard({
   const [menuVisible, setMenuVisible] = useState(false);
   const [guestAction, setGuestAction] = useState<string | null>(null);
 
+  const viewShotRef = useRef<ViewShot>(null);
+
   const handleFollow = () => {
     if (isGuest) { setGuestAction("follow people"); return; }
     toggleFollow.mutate({
@@ -91,156 +96,181 @@ export function PostCard({
     onToggleFavorite();
   };
 
+  const handleShare = async () => {
+    try {
+      if (!viewShotRef.current?.capture) return;
+      const uri = await viewShotRef.current.capture();
+      const isAvailable = await Sharing.isAvailableAsync();
+      if (isAvailable) {
+        await Sharing.shareAsync(uri, {
+          mimeType: "image/png",
+          dialogTitle: "Share this post",
+        });
+      }
+    } catch (error) {
+      console.warn("Share failed:", error);
+    }
+  };
+
   return (
     <>
-      <Pressable onPress={onOpen} style={styles.card}>
-        <View style={styles.row}>
-          <Pressable
-            onPress={onOpenAuthor}
-            disabled={!onOpenAuthor}
-            style={styles.avatarCol}
-          >
-            {post.author.profilePictureUrl ? (
-              <Image
-                source={post.author.profilePictureUrl}
-                style={styles.avatar}
-                contentFit="cover"
-                transition={150}
-              />
-            ) : (
-              <View style={styles.avatar}>
-                <Text style={styles.avatarText}>{authorInitial}</Text>
+      <View style={styles.card}>
+        <Pressable onPress={onOpen}>
+          <ViewShot ref={viewShotRef} options={{ format: "png", quality: 1 }}>
+            <View style={styles.shareableContent}>
+              <View style={styles.row}>
+                <Pressable
+                  onPress={onOpenAuthor}
+                  disabled={!onOpenAuthor}
+                  style={styles.avatarCol}
+                >
+                  {post.author.profilePictureUrl ? (
+                    <Image
+                      source={post.author.profilePictureUrl}
+                      style={styles.avatar}
+                      contentFit="cover"
+                      transition={150}
+                    />
+                  ) : (
+                    <View style={styles.avatar}>
+                      <Text style={styles.avatarText}>{authorInitial}</Text>
+                    </View>
+                  )}
+                </Pressable>
+
+                <View style={styles.contentCol}>
+                  <View style={styles.authorRow}>
+                    <Pressable
+                      onPress={onOpenAuthor}
+                      disabled={!onOpenAuthor}
+                      style={styles.authorInfo}
+                    >
+                      <Text style={styles.displayName} numberOfLines={1}>
+                        {authorDisplayName}
+                      </Text>
+                      <Text style={styles.username} numberOfLines={1}>
+                        {" "}@{post.author.username}
+                      </Text>
+                      <Text style={styles.timestamp}>
+                        {" "}· {formatRelativeTime(post.createdAt)}
+                      </Text>
+                    </Pressable>
+
+                    {!isOwnPost && !post.author.followedByCurrentUser && (user || isGuest) ? (
+                      <Pressable
+                        style={styles.followBtn}
+                        onPress={handleFollow}
+                        disabled={toggleFollow.isPending}
+                      >
+                        <Text style={styles.followBtnText}>Follow</Text>
+                      </Pressable>
+                    ) : null}
+
+                    {!isOwnPost && user && post.author.followedByCurrentUser ? (
+                      <Pressable
+                        style={styles.menuBtn}
+                        onPress={() => setMenuVisible(true)}
+                        disabled={toggleFollow.isPending}
+                      >
+                        <MaterialCommunityIcons
+                          name="dots-horizontal"
+                          size={20}
+                          color={TEXT}
+                        />
+                      </Pressable>
+                    ) : null}
+                  </View>
+
+                  {post.title && <Text style={styles.title}>{post.title}</Text>}
+
+                  {post.topic !== "GENERAL" && (
+                    <View style={styles.topicBadge}>
+                      <Text style={styles.topicBadgeText}>
+                        {TOPIC_DISPLAY_NAMES[post.topic]}
+                      </Text>
+                    </View>
+                  )}
+
+                  <Text style={styles.content}>{post.content}</Text>
+                </View>
               </View>
-            )}
+
+              <View style={styles.watermark}>
+                <Text style={styles.watermarkText}>Koinonia</Text>
+              </View>
+            </View>
+          </ViewShot>
+        </Pressable>
+
+        <View style={styles.actionsRow}>
+          <Pressable onPress={onAddComment} style={styles.action}>
+            <IconSymbol size={18} name="bubble.left" color={MUTED} />
+            <Text style={styles.actionCount}>
+              {formatCount(post.commentCount)}
+            </Text>
           </Pressable>
 
-          <View style={styles.contentCol}>
-            <View style={styles.authorRow}>
-              <Pressable
-                onPress={onOpenAuthor}
-                disabled={!onOpenAuthor}
-                style={styles.authorInfo}
+          <Pressable onPress={handleRepost} style={styles.action}>
+            <IconSymbol
+              size={18}
+              name="arrow.2.squarepath"
+              color={isReshared ? REPOST_ACTIVE : MUTED}
+            />
+            <Text
+              style={[
+                styles.actionCount,
+                isReshared && { color: REPOST_ACTIVE },
+              ]}
+            >
+              {formatCount(post.repostCount)}
+            </Text>
+          </Pressable>
+
+          <Pressable onPress={handleLike} style={styles.action}>
+            <IconSymbol
+              size={18}
+              name={isLiked ? "heart.fill" : "heart"}
+              color={isLiked ? LIKE_ACTIVE : MUTED}
+            />
+            <Text
+              style={[
+                styles.actionCount,
+                isLiked && { color: LIKE_ACTIVE },
+              ]}
+            >
+              {formatCount(post.likeCount)}
+            </Text>
+          </Pressable>
+
+          <Pressable onPress={handleFavorite} style={styles.action}>
+            <IconSymbol
+              size={18}
+              name={
+                post.favoritedByCurrentUser ? "bookmark.fill" : "bookmark"
+              }
+              color={post.favoritedByCurrentUser ? FAVORITE_ACTIVE : MUTED}
+            />
+            {post.favoriteCount >= 5 ? (
+              <Text
+                style={[
+                  styles.actionCount,
+                  post.favoritedByCurrentUser && { color: FAVORITE_ACTIVE },
+                ]}
               >
-                <Text style={styles.displayName} numberOfLines={1}>
-                  {authorDisplayName}
-                </Text>
-                <Text style={styles.username} numberOfLines={1}>
-                  {" "}
-                  @{post.author.username}
-                </Text>
-              </Pressable>
+                {formatCount(post.favoriteCount)}
+              </Text>
+            ) : null}
+          </Pressable>
 
-              {!isOwnPost && !post.author.followedByCurrentUser && (user || isGuest) ? (
-                <Pressable
-                  style={styles.followBtn}
-                  onPress={handleFollow}
-                  disabled={toggleFollow.isPending}
-                >
-                  <Text style={styles.followBtnText}>Follow</Text>
-                </Pressable>
-              ) : null}
-
-              {!isOwnPost && user && post.author.followedByCurrentUser ? (
-                <Pressable
-                  style={styles.menuBtn}
-                  onPress={() => setMenuVisible(true)}
-                  disabled={toggleFollow.isPending}
-                >
-                  <MaterialCommunityIcons
-                    name="dots-horizontal"
-                    size={20}
-                    color={TEXT}
-                  />
-                </Pressable>
-              ) : null}
-            </View>
-
-            {post.title && <Text style={styles.title}>{post.title}</Text>}
-
-            {post.topic !== "GENERAL" && (
-              <View style={styles.topicBadge}>
-                <Text style={styles.topicBadgeText}>
-                  {TOPIC_DISPLAY_NAMES[post.topic]}
-                </Text>
-              </View>
-            )}
-
-            <Text style={styles.content}>{post.content}</Text>
-
-            <View style={styles.actionsRow}>
-              <Pressable onPress={onAddComment} style={styles.action}>
-                <IconSymbol size={18} name="bubble.left" color={MUTED} />
-                <Text style={styles.actionCount}>
-                  {formatCount(post.commentCount)}
-                </Text>
-              </Pressable>
-
-              <Pressable onPress={handleRepost} style={styles.action}>
-                <IconSymbol
-                  size={18}
-                  name="arrow.2.squarepath"
-                  color={isReshared ? REPOST_ACTIVE : MUTED}
-                />
-                <Text
-                  style={[
-                    styles.actionCount,
-                    isReshared && { color: REPOST_ACTIVE },
-                  ]}
-                >
-                  {formatCount(post.repostCount)}
-                </Text>
-              </Pressable>
-
-              <Pressable onPress={handleLike} style={styles.action}>
-                <IconSymbol
-                  size={18}
-                  name={isLiked ? "heart.fill" : "heart"}
-                  color={isLiked ? LIKE_ACTIVE : MUTED}
-                />
-                <Text
-                  style={[
-                    styles.actionCount,
-                    isLiked && { color: LIKE_ACTIVE },
-                  ]}
-                >
-                  {formatCount(post.likeCount)}
-                </Text>
-              </Pressable>
-
-              <Pressable onPress={handleFavorite} style={styles.action}>
-                <IconSymbol
-                  size={18}
-                  name={
-                    post.favoritedByCurrentUser ? "bookmark.fill" : "bookmark"
-                  }
-                  color={post.favoritedByCurrentUser ? FAVORITE_ACTIVE : MUTED}
-                />
-                {post.favoriteCount >= 5 ? (
-                  <Text
-                    style={[
-                      styles.actionCount,
-                      post.favoritedByCurrentUser && { color: FAVORITE_ACTIVE },
-                    ]}
-                  >
-                    {formatCount(post.favoriteCount)}
-                  </Text>
-                ) : null}
-              </Pressable>
-
-              <View style={styles.action}>
-                <MaterialCommunityIcons
-                  name="eye-outline"
-                  size={18}
-                  color={MUTED}
-                />
-                <Text style={styles.actionCount}>
-                  {formatCount(post.viewCount ?? 0)}
-                </Text>
-              </View>
-            </View>
-          </View>
+          <Pressable onPress={handleShare} style={styles.action}>
+            <MaterialCommunityIcons
+              name="share-variant"
+              size={18}
+              color={MUTED}
+            />
+          </Pressable>
         </View>
-      </Pressable>
+      </View>
 
       <PostAuthorMenu
         visible={menuVisible}
@@ -260,11 +290,15 @@ export function PostCard({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: "#000000",
+    backgroundColor: BG,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: BORDER,
+  },
+  shareableContent: {
+    backgroundColor: BG,
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingTop: 12,
+    paddingBottom: 8,
   },
   row: {
     flexDirection: "row",
@@ -306,6 +340,10 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
   username: {
+    color: MUTED,
+    fontSize: 14,
+  },
+  timestamp: {
     color: MUTED,
     fontSize: 14,
   },
@@ -357,9 +395,19 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "600",
   },
+  watermark: {
+    alignItems: "flex-end",
+    paddingTop: 6,
+  },
+  watermarkText: {
+    color: "#3E4447",
+    fontSize: 10,
+    fontStyle: "italic",
+  },
   actionsRow: {
     flexDirection: "row",
-    marginTop: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
     gap: 28,
   },
   action: {

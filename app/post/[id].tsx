@@ -2,6 +2,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
+import { formatRelativeTime } from "@/src/utils/format";
 import {
   ActivityIndicator,
   FlatList,
@@ -70,6 +71,7 @@ function ReplyRow({ reply, currentUserId, onDelete, deleteIsPending, onToggleLik
         <View style={styles.commentHeader}>
           <Text style={styles.commentName}>{authorName}</Text>
           <Text style={styles.commentUsername}> @{reply.author.username}</Text>
+          <Text style={styles.commentTimestamp}> · {formatRelativeTime(reply.createdAt)}</Text>
           {isOwn ? (
             <Pressable
               onPress={() => onDelete(reply.id)}
@@ -148,6 +150,7 @@ function CommentItem({
           <View style={styles.commentHeader}>
             <Text style={styles.commentName}>{authorName}</Text>
             <Text style={styles.commentUsername}> @{comment.author.username}</Text>
+            <Text style={styles.commentTimestamp}> · {formatRelativeTime(comment.createdAt)}</Text>
             {isOwn ? (
               <Pressable
                 onPress={() => onDelete(comment.id)}
@@ -495,6 +498,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   commentUsername: {
+    color: "#71767B",
+    fontSize: 13,
+  },
+  commentTimestamp: {
     color: "#71767B",
     fontSize: 13,
     flex: 1,
