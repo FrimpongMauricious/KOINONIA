@@ -75,8 +75,47 @@ export default function PostDetailScreen() {
     );
   }
 
-  return (
-    <ScreenContainer contentStyle={styles.container} keyboardAvoiding>
+  const renderComment = ({ item }: { item: (typeof comments)[number] }) => {
+    const isOwn = item.author.id === user?.id;
+    const authorName = item.author.displayName ?? item.author.username;
+    const initial = authorName.charAt(0).toUpperCase();
+
+    return (
+      <View style={styles.commentRow}>
+        {item.author.profilePictureUrl ? (
+          <Image
+            source={{ uri: item.author.profilePictureUrl }}
+            style={styles.commentAvatar}
+            contentFit="cover"
+            transition={150}
+          />
+        ) : (
+          <View style={styles.commentAvatar}>
+            <Text style={styles.commentAvatarText}>{initial}</Text>
+          </View>
+        )}
+        <View style={styles.commentBody}>
+          <View style={styles.commentHeader}>
+            <Text style={styles.commentName}>{authorName}</Text>
+            <Text style={styles.commentUsername}> @{item.author.username}</Text>
+            {isOwn ? (
+              <Pressable
+                onPress={() => deleteCommentMutation.mutate(item.id)}
+                disabled={deleteCommentMutation.isPending}
+                style={styles.deleteBtn}
+              >
+                <Text style={styles.deleteText}>Delete</Text>
+              </Pressable>
+            ) : null}
+          </View>
+          <Text style={styles.commentContent}>{item.content}</Text>
+        </View>
+      </View>
+    );
+  };
+
+  const listHeader = (
+    <>
       <PostCard
         post={post}
         canLike={!isGuest}
@@ -93,7 +132,32 @@ export default function PostDetailScreen() {
         onToggleRepost={() => toggleRepost.mutate(post)}
         onToggleFavorite={() => toggleFavorite.mutate(post)}
       />
+      <View style={styles.commentsHeader}>
+        <Text style={styles.commentsTitle}>Replies ({comments.length})</Text>
+      </View>
+    </>
+  );
 
+  const listEmpty = commentsLoading ? (
+    <ActivityIndicator style={styles.paddedText} color="#1D9BF0" />
+  ) : (
+    <ThemedText style={styles.emptyText}>
+      No replies yet — be the first to start the conversation.
+    </ThemedText>
+  );
+
+  return (
+    <ScreenContainer contentStyle={styles.container} keyboardAvoiding>
+      <FlatList
+        style={styles.flex}
+        data={comments}
+        keyExtractor={(item) => item.id.toString()}
+        ListHeaderComponent={listHeader}
+        ListEmptyComponent={listEmpty}
+        contentContainerStyle={styles.commentsList}
+        renderItem={renderComment}
+        keyboardShouldPersistTaps="handled"
+      />
       {!isGuest ? (
         <View style={styles.composerRow}>
           <TextInput
@@ -118,69 +182,15 @@ export default function PostDetailScreen() {
           </Pressable>
         </View>
       ) : null}
-
-      <View style={styles.commentsHeader}>
-        <Text style={styles.commentsTitle}>Replies ({comments.length})</Text>
-      </View>
-
-      {commentsLoading ? (
-        <ActivityIndicator style={styles.paddedText} color="#1D9BF0" />
-      ) : comments.length === 0 ? (
-        <ThemedText style={styles.emptyText}>
-          No replies yet — be the first to start the conversation.
-        </ThemedText>
-      ) : (
-        <FlatList
-          data={comments}
-          keyExtractor={(item) => item.id.toString()}
-          contentContainerStyle={styles.commentsList}
-          scrollEnabled={false}
-          renderItem={({ item }) => {
-            const isOwn = item.author.id === user?.id;
-            const authorName = item.author.displayName ?? item.author.username;
-            const initial = authorName.charAt(0).toUpperCase();
-
-            return (
-              <View style={styles.commentRow}>
-                {item.author.profilePictureUrl ? (
-                  <Image
-                    source={{ uri: item.author.profilePictureUrl }}
-                    style={styles.commentAvatar}
-                    contentFit="cover"
-                    transition={150}
-                  />
-                ) : (
-                  <View style={styles.commentAvatar}>
-                    <Text style={styles.commentAvatarText}>{initial}</Text>
-                  </View>
-                )}
-                <View style={styles.commentBody}>
-                  <View style={styles.commentHeader}>
-                    <Text style={styles.commentName}>{authorName}</Text>
-                    <Text style={styles.commentUsername}> @{item.author.username}</Text>
-                    {isOwn ? (
-                      <Pressable
-                        onPress={() => deleteCommentMutation.mutate(item.id)}
-                        disabled={deleteCommentMutation.isPending}
-                        style={styles.deleteBtn}
-                      >
-                        <Text style={styles.deleteText}>Delete</Text>
-                      </Pressable>
-                    ) : null}
-                  </View>
-                  <Text style={styles.commentContent}>{item.content}</Text>
-                </View>
-              </View>
-            );
-          }}
-        />
-      )}
     </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+  },
+  flex: {
     flex: 1,
   },
   centered: {
