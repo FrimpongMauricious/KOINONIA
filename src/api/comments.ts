@@ -1,5 +1,5 @@
 import { apiClient } from "@/src/api/client";
-import { CommentResponse, Page } from "@/src/api/types";
+import { CommentResponse, CreateCommentRequest, Page } from "@/src/api/types";
 
 export async function fetchComments(
   postId: number,
@@ -15,11 +15,11 @@ export async function fetchComments(
 
 export async function createComment(
   postId: number,
-  content: string,
+  req: CreateCommentRequest,
 ): Promise<CommentResponse> {
   const res = await apiClient.post<CommentResponse>(
     `/api/v1/posts/${postId}/comments`,
-    { content },
+    req,
   );
   return res.data;
 }

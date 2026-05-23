@@ -113,6 +113,20 @@ export type CommentResponse = {
   createdAt: string;
   updatedAt: string;
   author: AuthorRef;
+  likeCount: number;
+  likedByCurrentUser: boolean;
+  parentId: number | null;
+  replyCount: number;
+};
+
+export type CommentLikeResponse = {
+  likeCount: number;
+  likedByCurrentUser: boolean;
+};
+
+export type CreateCommentRequest = {
+  content: string;
+  parentId?: number;
 };
 
 export type FollowResponse = {

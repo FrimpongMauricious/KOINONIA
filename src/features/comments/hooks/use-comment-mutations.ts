@@ -1,7 +1,7 @@
 import { InfiniteData, useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { createComment, deleteComment } from "@/src/api/comments";
-import { CommentResponse, Page, PostResponse } from "@/src/api/types";
+import { CommentResponse, CreateCommentRequest, Page, PostResponse } from "@/src/api/types";
 
 function patchCommentCount(
   old: InfiniteData<Page<PostResponse>> | undefined,
@@ -43,16 +43,38 @@ function applyCommentCountDelta(
 export function useCreateComment(postId: number) {
   const queryClient = useQueryClient();
 
-  return useMutation<CommentResponse, Error, string>({
-    mutationFn: (content) => createComment(postId, content),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["comments", postId] });
-      applyCommentCountDelta(queryClient, postId, 1);
-      queryClient.setQueryData<PostResponse>(
-        ["post", postId],
-        (old) => (old ? { ...old, commentCount: old.commentCount + 1 } : old),
-      );
-      queryClient.invalidateQueries({ queryKey: ["my-streak"] });
+  return useMutation<CommentResponse, Error, CreateCommentRequest>({
+    mutationFn: (req) => createComment(postId, req),
+    onSuccess: (_data, req) => {
+      if (req.parentId != null) {
+        queryClient.invalidateQueries({ queryKey: ["replies", req.parentId] });
+        // increment replyCount on the parent comment in the comments cache
+        queryClient.setQueryData<InfiniteData<Page<CommentResponse>>>(
+          ["comments", postId],
+          (old) => {
+            if (!old) return old;
+            return {
+              ...old,
+              pages: old.pages.map((page) => ({
+                ...page,
+                content: page.content.map((c) =>
+                  c.id === req.parentId
+                    ? { ...c, replyCount: c.replyCount + 1 }
+                    : c,
+                ),
+              })),
+            };
+          },
+        );
+      } else {
+        queryClient.invalidateQueries({ queryKey: ["comments", postId] });
+        applyCommentCountDelta(queryClient, postId, 1);
+        queryClient.setQueryData<PostResponse>(
+          ["post", postId],
+          (old) => (old ? { ...old, commentCount: old.commentCount + 1 } : old),
+        );
+        queryClient.invalidateQueries({ queryKey: ["my-streak"] });
+      }
     },
   });
 }
