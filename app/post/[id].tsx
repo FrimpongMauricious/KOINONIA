@@ -316,7 +316,7 @@ export default function PostDetailScreen() {
     >
       <KeyboardAvoidingView
         style={styles.flex}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
         keyboardVerticalOffset={Platform.OS === "ios" ? 88 : 0}
       >
         <View style={styles.flex}>
@@ -539,10 +539,6 @@ const styles = StyleSheet.create({
   },
   // composer
   composerContainer: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
     borderTopWidth: StyleSheet.hairlineWidth,
   },
   replyingBanner: {
