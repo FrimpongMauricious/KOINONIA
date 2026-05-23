@@ -4,16 +4,21 @@ import { useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useQuery } from "@tanstack/react-query";
 
 import { ScreenContainer } from "@/components/screen-container";
 import { ThemedText } from "@/components/themed-text";
+import { Colors } from "@/constants/theme";
+import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useAuth } from "@/src/auth/auth-context";
 import { fetchPostById } from "@/src/api/posts";
 import { PostCard } from "@/src/features/feed/components/post-card";
@@ -34,6 +39,8 @@ export default function PostDetailScreen() {
   const numericId = parseInt(id ?? "0", 10);
   const { user } = useAuth();
   const isGuest = !user;
+  const colorScheme = useColorScheme() ?? "light";
+  const palette = Colors[colorScheme];
 
   const [commentDraft, setCommentDraft] = useState("");
 
@@ -61,7 +68,7 @@ export default function PostDetailScreen() {
 
   if (postLoading) {
     return (
-      <ScreenContainer contentStyle={styles.centered} keyboardAvoiding>
+      <ScreenContainer contentStyle={styles.centered}>
         <ActivityIndicator size="large" color="#1D9BF0" />
       </ScreenContainer>
     );
@@ -69,7 +76,7 @@ export default function PostDetailScreen() {
 
   if (isError || !post) {
     return (
-      <ScreenContainer contentStyle={styles.container} keyboardAvoiding>
+      <ScreenContainer>
         <ThemedText style={styles.paddedText}>Post not found.</ThemedText>
       </ScreenContainer>
     );
@@ -147,47 +154,63 @@ export default function PostDetailScreen() {
   );
 
   return (
-    <ScreenContainer contentStyle={styles.container} keyboardAvoiding>
-      <FlatList
+    <SafeAreaView
+      style={[styles.safeArea, { backgroundColor: palette.background }]}
+      edges={["bottom", "left", "right"]}
+    >
+      <KeyboardAvoidingView
         style={styles.flex}
-        data={comments}
-        keyExtractor={(item) => item.id.toString()}
-        ListHeaderComponent={listHeader}
-        ListEmptyComponent={listEmpty}
-        contentContainerStyle={styles.commentsList}
-        renderItem={renderComment}
-        keyboardShouldPersistTaps="handled"
-      />
-      {!isGuest ? (
-        <View style={styles.composerRow}>
-          <TextInput
-            style={styles.commentInput}
-            placeholder="Post your reply…"
-            placeholderTextColor="#71767B"
-            value={commentDraft}
-            onChangeText={setCommentDraft}
-            maxLength={500}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 88 : 0}
+      >
+        <View style={styles.flex}>
+          <FlatList
+            style={styles.flex}
+            data={comments}
+            keyExtractor={(item) => item.id.toString()}
+            ListHeaderComponent={listHeader}
+            ListEmptyComponent={listEmpty}
+            contentContainerStyle={styles.commentsList}
+            renderItem={renderComment}
+            keyboardShouldPersistTaps="handled"
           />
-          <Pressable
-            style={[
-              styles.replyBtn,
-              (!commentDraft.trim() || createComment.isPending) && styles.btnDisabled,
-            ]}
-            onPress={handleSubmitComment}
-            disabled={!commentDraft.trim() || createComment.isPending}
-          >
-            <Text style={styles.replyBtnText}>
-              {createComment.isPending ? "…" : "Reply"}
-            </Text>
-          </Pressable>
+          {!isGuest ? (
+            <View
+              style={[
+                styles.composerRow,
+                { backgroundColor: palette.background, borderTopColor: palette.border },
+              ]}
+            >
+              <TextInput
+                style={styles.commentInput}
+                placeholder="Post your reply…"
+                placeholderTextColor="#71767B"
+                value={commentDraft}
+                onChangeText={setCommentDraft}
+                maxLength={500}
+              />
+              <Pressable
+                style={[
+                  styles.replyBtn,
+                  (!commentDraft.trim() || createComment.isPending) && styles.btnDisabled,
+                ]}
+                onPress={handleSubmitComment}
+                disabled={!commentDraft.trim() || createComment.isPending}
+              >
+                <Text style={styles.replyBtnText}>
+                  {createComment.isPending ? "…" : "Reply"}
+                </Text>
+              </Pressable>
+            </View>
+          ) : null}
         </View>
-      ) : null}
-    </ScreenContainer>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
   },
   flex: {
@@ -202,15 +225,16 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   composerRow: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
     flexDirection: "row",
     gap: 8,
     alignItems: "center",
     paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingVertical: 8,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: "#2F3336",
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#2F3336",
   },
   commentInput: {
     flex: 1,
@@ -254,7 +278,7 @@ const styles = StyleSheet.create({
     color: "#71767B",
   },
   commentsList: {
-    paddingBottom: 24,
+    paddingBottom: 80,
   },
   commentRow: {
     flexDirection: "row",
