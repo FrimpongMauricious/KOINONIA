@@ -9,7 +9,7 @@ export function AppLogo({ size = 72 }: AppLogoProps) {
   return (
     <View style={styles.container}>
       <Image
-        source={require("@/assets/images/KOINONIA_image.jpg")}
+        source={require("@/assets/images/new_koinonia_icon.png")}
         style={{ width: size, height: size }}
         contentFit="contain"
       />
