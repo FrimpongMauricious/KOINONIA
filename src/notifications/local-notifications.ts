@@ -1,4 +1,9 @@
+import Constants from "expo-constants";
 import * as Notifications from "expo-notifications";
+
+function isExpoGo(): boolean {
+  return Constants.appOwnership === "expo";
+}
 
 const MORNING_BODIES = [
   "Start your day in the Word. Share a verse or reflection with the community.",
@@ -23,11 +28,14 @@ function randomEveningMessage(): string {
 }
 
 export async function requestNotificationPermissions(): Promise<boolean> {
+  if (isExpoGo()) return false;
   const { status } = await Notifications.requestPermissionsAsync();
   return status === "granted";
 }
 
 export async function scheduleDailyReminders(): Promise<void> {
+  if (isExpoGo()) return;
+
   await Notifications.cancelAllScheduledNotificationsAsync();
 
   await Notifications.scheduleNotificationAsync({
@@ -56,5 +64,6 @@ export async function scheduleDailyReminders(): Promise<void> {
 }
 
 export async function cancelAllReminders(): Promise<void> {
+  if (isExpoGo()) return;
   await Notifications.cancelAllScheduledNotificationsAsync();
 }
