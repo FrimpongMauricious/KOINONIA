@@ -1,12 +1,8 @@
 import Constants from "expo-constants";
-import * as Notifications from "expo-notifications";
 
-function isExpoGo(): boolean {
-  return Constants.appOwnership === "expo";
-}
-
-export function setupNotificationHandler(): void {
-  if (isExpoGo()) return;
+export async function setupNotificationHandler(): Promise<void> {
+  if (Constants.appOwnership === "expo") return;
+  const Notifications = await import("expo-notifications");
   Notifications.setNotificationHandler({
     handleNotification: async () => ({
       shouldShowAlert: true,

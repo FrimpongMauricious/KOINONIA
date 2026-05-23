@@ -8,14 +8,12 @@ import { ActivityIndicator, View } from "react-native";
 import "react-native-reanimated";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
-import * as Notifications from "expo-notifications";
+import Constants from "expo-constants";
 
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { AuthProvider, useAuth } from "@/src/auth/auth-context";
 import { setupNotificationHandler } from "@/src/notifications/notification-setup";
 import { StreakCelebrationProvider } from "@/src/features/streak/streak-celebration-context";
-
-setupNotificationHandler();
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -36,10 +34,18 @@ function RootLayoutInner() {
   const segments = useSegments();
 
   useEffect(() => {
-    const subscription = Notifications.addNotificationResponseReceivedListener(() => {
-      router.push("/(tabs)");
-    });
-    return () => subscription.remove();
+    setupNotificationHandler();
+
+    let subscription: { remove: () => void } | null = null;
+    if (Constants.appOwnership !== "expo") {
+      import("expo-notifications").then((Notifications) => {
+        subscription = Notifications.addNotificationResponseReceivedListener(() => {
+          router.push("/(tabs)");
+        });
+      }).catch(() => {});
+    }
+
+    return () => subscription?.remove();
   }, []);
 
   useEffect(() => {
