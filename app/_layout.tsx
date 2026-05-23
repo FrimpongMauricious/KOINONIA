@@ -8,8 +8,13 @@ import { ActivityIndicator, View } from "react-native";
 import "react-native-reanimated";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
+import * as Notifications from "expo-notifications";
+
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { AuthProvider, useAuth } from "@/src/auth/auth-context";
+import { setupNotificationHandler } from "@/src/notifications/notification-setup";
+
+setupNotificationHandler();
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -28,6 +33,13 @@ function RootLayoutInner() {
   const { status, hasOnboarded } = useAuth();
   const router = useRouter();
   const segments = useSegments();
+
+  useEffect(() => {
+    const subscription = Notifications.addNotificationResponseReceivedListener(() => {
+      router.push("/(tabs)");
+    });
+    return () => subscription.remove();
+  }, []);
 
   useEffect(() => {
     if (status === "loading") return;

@@ -11,6 +11,11 @@ import { useQueryClient } from "@tanstack/react-query";
 import { fetchMe, login as apiLogin, register as apiRegister } from "@/src/api/auth";
 import { LoginRequest, RegisterRequest, UserProfileResponse } from "@/src/api/types";
 import { clearToken, getToken, saveToken } from "@/src/auth/token-storage";
+import {
+  cancelAllReminders,
+  requestNotificationPermissions,
+  scheduleDailyReminders,
+} from "@/src/notifications/local-notifications";
 import { hasCompletedOnboarding, markOnboardingComplete } from "@/src/storage/onboarding-storage";
 
 type AuthStatus = "loading" | "authenticated" | "unauthenticated" | "guest";
@@ -52,6 +57,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const me = await fetchMe();
         setUser(me);
         setStatus("authenticated");
+        const granted = await requestNotificationPermissions();
+        if (granted) await scheduleDailyReminders();
       } catch {
         await clearToken();
         setStatus("unauthenticated");
@@ -67,6 +74,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     queryClient.clear();
     setUser(me);
     setStatus("authenticated");
+    const granted = await requestNotificationPermissions();
+    if (granted) await scheduleDailyReminders();
   }, [queryClient]);
 
   const register = useCallback(async (data: RegisterRequest) => {
@@ -76,9 +85,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     queryClient.clear();
     setUser(me);
     setStatus("authenticated");
+    const granted = await requestNotificationPermissions();
+    if (granted) await scheduleDailyReminders();
   }, [queryClient]);
 
   const logout = useCallback(async () => {
+    await cancelAllReminders();
     await clearToken();
     setUser(null);
     setStatus("unauthenticated");
@@ -90,6 +102,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const continueAsGuest = useCallback(() => {
+    cancelAllReminders();
     setUser(null);
     setStatus("guest");
   }, []);
