@@ -408,6 +408,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     paddingHorizontal: 16,
     paddingVertical: 8,
+    marginLeft: 52,
     gap: 28,
   },
   action: {
