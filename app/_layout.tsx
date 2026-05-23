@@ -13,6 +13,7 @@ import * as Notifications from "expo-notifications";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { AuthProvider, useAuth } from "@/src/auth/auth-context";
 import { setupNotificationHandler } from "@/src/notifications/notification-setup";
+import { StreakCelebrationProvider } from "@/src/features/streak/streak-celebration-context";
 
 setupNotificationHandler();
 
@@ -100,7 +101,9 @@ export default function RootLayout() {
       <SafeAreaProvider>
         <ThemeProvider value={DarkTheme}>
           <AuthProvider>
-            <RootLayoutInner />
+            <StreakCelebrationProvider>
+              <RootLayoutInner />
+            </StreakCelebrationProvider>
           </AuthProvider>
           <StatusBar style="light" backgroundColor="#000000" />
         </ThemeProvider>

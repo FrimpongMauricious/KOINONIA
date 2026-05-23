@@ -5,7 +5,6 @@ import {
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
-import { Alert } from "react-native";
 
 import {
   createPost,
@@ -16,16 +15,7 @@ import {
   unlikePost,
   unrepostPost,
 } from "@/src/api/posts";
-import { fetchMyStreak } from "@/src/api/streak";
 import { CreatePostRequest, LikeResponse, Page, PostResponse } from "@/src/api/types";
-
-const STREAK_MILESTONES: Record<number, string> = {
-  7: "One week of fellowship! 🔥",
-  14: "Two weeks strong! 🔥🔥",
-  30: "A month of daily devotion! 🔥🔥",
-  100: "Century of faith! 🔥🔥🔥",
-  365: "A year in the Word! 🔥🔥🔥🔥",
-};
 
 // ── Per-page patch helper ─────────────────────────────────────────────────────
 
@@ -311,14 +301,9 @@ export function useCreatePost() {
 
   return useMutation<PostResponse, Error, CreatePostRequest>({
     mutationFn: (payload) => createPost(payload),
-    onSuccess: async () => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["feed"] });
       queryClient.invalidateQueries({ queryKey: ["my-streak"] });
-
-      const streak = await fetchMyStreak();
-      if (STREAK_MILESTONES[streak.currentStreak]) {
-        Alert.alert("Streak Milestone!", STREAK_MILESTONES[streak.currentStreak]);
-      }
     },
   });
 }

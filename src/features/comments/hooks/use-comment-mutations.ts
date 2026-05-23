@@ -1,17 +1,7 @@
 import { InfiniteData, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Alert } from "react-native";
 
 import { createComment, deleteComment } from "@/src/api/comments";
-import { fetchMyStreak } from "@/src/api/streak";
 import { CommentResponse, Page, PostResponse } from "@/src/api/types";
-
-const STREAK_MILESTONES: Record<number, string> = {
-  7: "One week of fellowship! 🔥",
-  14: "Two weeks strong! 🔥🔥",
-  30: "A month of daily devotion! 🔥🔥",
-  100: "Century of faith! 🔥🔥🔥",
-  365: "A year in the Word! 🔥🔥🔥🔥",
-};
 
 function patchCommentCount(
   old: InfiniteData<Page<PostResponse>> | undefined,
@@ -55,7 +45,7 @@ export function useCreateComment(postId: number) {
 
   return useMutation<CommentResponse, Error, string>({
     mutationFn: (content) => createComment(postId, content),
-    onSuccess: async () => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["comments", postId] });
       applyCommentCountDelta(queryClient, postId, 1);
       queryClient.setQueryData<PostResponse>(
@@ -63,11 +53,6 @@ export function useCreateComment(postId: number) {
         (old) => (old ? { ...old, commentCount: old.commentCount + 1 } : old),
       );
       queryClient.invalidateQueries({ queryKey: ["my-streak"] });
-
-      const streak = await fetchMyStreak();
-      if (STREAK_MILESTONES[streak.currentStreak]) {
-        Alert.alert("Streak Milestone!", STREAK_MILESTONES[streak.currentStreak]);
-      }
     },
   });
 }
