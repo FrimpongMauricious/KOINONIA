@@ -64,6 +64,12 @@ export function StreakCelebrationProvider({ children }: { children: ReactNode })
 
   }, [streak]);
 
+  useEffect(() => {
+    shownThisSessionRef.current = false;
+    shownLostThisSessionRef.current = false;
+    prevLastActivityRef.current = null;
+  }, [user?.id]);
+
   const userName = user?.displayName ?? user?.username ?? "";
 
   return (
