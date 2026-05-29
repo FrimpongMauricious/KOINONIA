@@ -13,22 +13,28 @@ export function StreakCelebrationProvider({ children }: { children: ReactNode })
   const [visible, setVisible] = useState(false);
   const [celebrationStreak, setCelebrationStreak] = useState(0);
 
-  const prevStreakRef = useRef<number | null>(null);
+  const prevLastActivityRef = useRef<string | null>(null);
   const shownThisSessionRef = useRef(false);
 
   useEffect(() => {
     if (!streak || shownThisSessionRef.current) return;
 
-    if (
-      prevStreakRef.current !== null &&
-      streak.currentStreak > prevStreakRef.current
-    ) {
-      setCelebrationStreak(streak.currentStreak);
-      setVisible(true);
-      shownThisSessionRef.current = true;
+    const today = new Date().toISOString().split("T")[0];
+    const lastActivity = streak.lastActivityDate;
+    const prevLastActivity = prevLastActivityRef.current;
+
+    if (lastActivity === today) {
+      const isFreshTransition = prevLastActivity !== null && prevLastActivity !== today;
+      const isFirstLoadWithActivityToday = prevLastActivity === null && streak.currentStreak >= 1;
+
+      if (isFreshTransition || isFirstLoadWithActivityToday) {
+        setCelebrationStreak(streak.currentStreak);
+        setVisible(true);
+        shownThisSessionRef.current = true;
+      }
     }
 
-    prevStreakRef.current = streak.currentStreak;
+    prevLastActivityRef.current = lastActivity;
   }, [streak]);
 
   const userName = user?.displayName ?? user?.username ?? "";
