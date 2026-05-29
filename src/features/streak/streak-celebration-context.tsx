@@ -28,16 +28,19 @@ export function StreakCelebrationProvider({ children }: { children: ReactNode })
     const lastActivity = streak.lastActivityDate;
     const prevLastActivity = prevLastActivityRef.current;
 
-    // Celebration: user posted today for the first time this session
-    if (!shownThisSessionRef.current && lastActivity === today) {
-      const isFreshTransition = prevLastActivity !== null && prevLastActivity !== today;
-      const isFirstLoadWithActivityToday = prevLastActivity === null && streak.currentStreak >= 1;
+    // Update ref before any checks so rapid re-renders don't double-fire
+    prevLastActivityRef.current = lastActivity;
 
-      if (isFreshTransition || isFirstLoadWithActivityToday) {
-        setCelebrationStreak(streak.currentStreak);
-        setVisible(true);
-        shownThisSessionRef.current = true;
-      }
+    // Celebration: lastActivityDate transitioned to today this session
+    if (
+      !shownThisSessionRef.current &&
+      lastActivity === today &&
+      prevLastActivity !== today &&
+      streak.currentStreak >= 1
+    ) {
+      setCelebrationStreak(streak.currentStreak);
+      setVisible(true);
+      shownThisSessionRef.current = true;
     }
 
     // Lost streak: user had a meaningful streak but missed at least yesterday
@@ -59,7 +62,6 @@ export function StreakCelebrationProvider({ children }: { children: ReactNode })
       }
     }
 
-    prevLastActivityRef.current = lastActivity;
   }, [streak]);
 
   const userName = user?.displayName ?? user?.username ?? "";
