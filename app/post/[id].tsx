@@ -1,12 +1,13 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { formatRelativeTime } from "@/src/utils/format";
 import {
   ActivityIndicator,
   FlatList,
-  KeyboardAvoidingView,
+  Keyboard,
+  KeyboardEvent,
   Platform,
   Pressable,
   StyleSheet,
@@ -234,6 +235,22 @@ export default function PostDetailScreen() {
   const insets = useSafeAreaInsets();
   const [commentDraft, setCommentDraft] = useState("");
   const [replyingTo, setReplyingTo] = useState<CommentResponse | null>(null);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+
+  useEffect(() => {
+    const showSub = Keyboard.addListener(
+      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow",
+      (e: KeyboardEvent) => setKeyboardHeight(e.endCoordinates.height),
+    );
+    const hideSub = Keyboard.addListener(
+      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide",
+      () => setKeyboardHeight(0),
+    );
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
 
   const { data: post, isLoading: postLoading, isError } = useQuery({
     queryKey: ["post", numericId],
@@ -315,91 +332,87 @@ export default function PostDetailScreen() {
       style={[styles.safeArea, { backgroundColor: palette.background }]}
       edges={["left", "right"]}
     >
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 88 : 0}
-      >
-        <View style={styles.flex}>
-          <FlatList
-            style={styles.flex}
-            data={comments}
-            keyExtractor={(item) => item.id.toString()}
-            ListHeaderComponent={listHeader}
-            ListEmptyComponent={listEmpty}
-            contentContainerStyle={styles.commentsList}
-            keyboardShouldPersistTaps="handled"
-            renderItem={({ item }) => (
-              <CommentItem
-                comment={item}
-                postId={numericId}
-                currentUserId={user?.id}
-                isGuest={isGuest}
-                onReply={(c) => {
-                  setReplyingTo(c);
-                }}
-                onDelete={(cid) => deleteCommentMutation.mutate(cid)}
-                deleteIsPending={deleteCommentMutation.isPending}
-                onToggleLike={(c) => toggleCommentLike.mutate(c)}
-              />
-            )}
-          />
+      <View style={styles.flex}>
+        <FlatList
+          style={styles.flex}
+          data={comments}
+          keyExtractor={(item) => item.id.toString()}
+          ListHeaderComponent={listHeader}
+          ListEmptyComponent={listEmpty}
+          contentContainerStyle={{ paddingBottom: 80 + keyboardHeight }}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+          renderItem={({ item }) => (
+            <CommentItem
+              comment={item}
+              postId={numericId}
+              currentUserId={user?.id}
+              isGuest={isGuest}
+              onReply={(c) => {
+                setReplyingTo(c);
+              }}
+              onDelete={(cid) => deleteCommentMutation.mutate(cid)}
+              deleteIsPending={deleteCommentMutation.isPending}
+              onToggleLike={(c) => toggleCommentLike.mutate(c)}
+            />
+          )}
+        />
 
-          {!isGuest ? (
-            <View
-              style={[
-                styles.composerContainer,
-                {
-                  backgroundColor: palette.background,
-                  borderTopColor: palette.border,
-                  paddingBottom: insets.bottom + 8,
-                },
-              ]}
-            >
-              {replyingTo ? (
-                <View style={styles.replyingBanner}>
-                  <Text style={styles.replyingText}>
-                    Replying to{" "}
-                    <Text style={styles.replyingHandle}>
-                      @{replyingTo.author.username}
-                    </Text>
+        {!isGuest ? (
+          <View
+            style={[
+              styles.composerContainer,
+              {
+                backgroundColor: palette.background,
+                borderTopColor: palette.border,
+                paddingBottom: keyboardHeight > 0 ? 8 : insets.bottom + 8,
+                transform: [{ translateY: -keyboardHeight }],
+              },
+            ]}
+          >
+            {replyingTo ? (
+              <View style={styles.replyingBanner}>
+                <Text style={styles.replyingText}>
+                  Replying to{" "}
+                  <Text style={styles.replyingHandle}>
+                    @{replyingTo.author.username}
                   </Text>
-                  <Pressable onPress={() => setReplyingTo(null)} hitSlop={8}>
-                    <MaterialCommunityIcons name="close" size={16} color="#71767B" />
-                  </Pressable>
-                </View>
-              ) : null}
-              <View style={styles.composerRow}>
-                <TextInput
-                  style={styles.commentInput}
-                  placeholder={
-                    replyingTo
-                      ? `Reply to @${replyingTo.author.username}…`
-                      : "Write a comment…"
-                  }
-                  placeholderTextColor="#71767B"
-                  value={commentDraft}
-                  onChangeText={setCommentDraft}
-                  maxLength={500}
-                />
-                <Pressable
-                  style={[
-                    styles.replyBtn,
-                    (!commentDraft.trim() || createComment.isPending) &&
-                      styles.btnDisabled,
-                  ]}
-                  onPress={handleSubmitComment}
-                  disabled={!commentDraft.trim() || createComment.isPending}
-                >
-                  <Text style={styles.replyBtnText}>
-                    {createComment.isPending ? "…" : "Reply"}
-                  </Text>
+                </Text>
+                <Pressable onPress={() => setReplyingTo(null)} hitSlop={8}>
+                  <MaterialCommunityIcons name="close" size={16} color="#71767B" />
                 </Pressable>
               </View>
+            ) : null}
+            <View style={styles.composerRow}>
+              <TextInput
+                style={styles.commentInput}
+                placeholder={
+                  replyingTo
+                    ? `Reply to @${replyingTo.author.username}…`
+                    : "Write a comment…"
+                }
+                placeholderTextColor="#71767B"
+                value={commentDraft}
+                onChangeText={setCommentDraft}
+                maxLength={500}
+              />
+              <Pressable
+                style={[
+                  styles.replyBtn,
+                  (!commentDraft.trim() || createComment.isPending) &&
+                    styles.btnDisabled,
+                ]}
+                onPress={handleSubmitComment}
+                disabled={!commentDraft.trim() || createComment.isPending}
+              >
+                <Text style={styles.replyBtnText}>
+                  {createComment.isPending ? "…" : "Reply"}
+                </Text>
+              </Pressable>
             </View>
-          ) : null}
-        </View>
-      </KeyboardAvoidingView>
+          </View>
+        ) : null}
+      </View>
     </SafeAreaView>
   );
 }
