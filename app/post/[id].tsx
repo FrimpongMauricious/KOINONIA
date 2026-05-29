@@ -14,7 +14,7 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useQuery } from "@tanstack/react-query";
 
 import { ScreenContainer } from "@/components/screen-container";
@@ -231,6 +231,7 @@ export default function PostDetailScreen() {
   const colorScheme = useColorScheme() ?? "light";
   const palette = Colors[colorScheme];
 
+  const insets = useSafeAreaInsets();
   const [commentDraft, setCommentDraft] = useState("");
   const [replyingTo, setReplyingTo] = useState<CommentResponse | null>(null);
 
@@ -312,7 +313,7 @@ export default function PostDetailScreen() {
   return (
     <SafeAreaView
       style={[styles.safeArea, { backgroundColor: palette.background }]}
-      edges={["bottom", "left", "right"]}
+      edges={["left", "right"]}
     >
       <KeyboardAvoidingView
         style={styles.flex}
@@ -348,7 +349,11 @@ export default function PostDetailScreen() {
             <View
               style={[
                 styles.composerContainer,
-                { backgroundColor: palette.background, borderTopColor: palette.border },
+                {
+                  backgroundColor: palette.background,
+                  borderTopColor: palette.border,
+                  paddingBottom: insets.bottom + 8,
+                },
               ]}
             >
               {replyingTo ? (
