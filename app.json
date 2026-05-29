@@ -1,63 +1,62 @@
-﻿{
-    "expo":  {
-                 "name":  "Koinonia",
-                 "slug":  "koinonia",
-                 "version":  "1.0.0",
-                 "orientation":  "portrait",
-                 "icon":  "./assets/images/new_koinonia_icon.png",
-                 "scheme":  "koinonia",
-                 "userInterfaceStyle":  "dark",
-                 "ios":  {
-                             "supportsTablet":  true,
-                             "bundleIdentifier":  "com.koinonia.app"
-                         },
-                 "androidStatusBar":  {
-                                          "barStyle":  "light-content",
-                                          "backgroundColor":  "#000000",
-                                          "translucent":  false
-                                      },
-                 "android":  {
-                                 "package":  "com.koinonia.app",
-                                 "adaptiveIcon":  {
-                                                      "backgroundColor":  "#000000",
-                                                      "foregroundImage":  "./assets/images/new_koinonia_icon.png",
-                                                      "monochromeImage":  "./assets/images/new_koinonia_icon.png"
-                                                  },
-                                 "predictiveBackGestureEnabled":  false
-                             },
-                 "web":  {
-                             "output":  "static",
-                             "favicon":  "./assets/images/new_koinonia_icon.png"
-                         },
-                 "plugins":  [
-                                 "expo-router",
-                                 "expo-notifications",
-                                 [
-                                     "expo-splash-screen",
-                                     {
-                                         "image":  "./assets/images/KOINONIA_image.jpg",
-                                         "imageWidth":  200,
-                                         "resizeMode":  "contain",
-                                         "backgroundColor":  "#000000",
-                                         "dark":  {
-                                                      "backgroundColor":  "#000000"
-                                                  }
-                                     }
-                                 ],
-                                 "expo-secure-store",
-                                 "expo-web-browser"
-                             ],
-                 "experiments":  {
-                                     "typedRoutes":  true,
-                                     "reactCompiler":  true
-                                 },
-                 "extra":  {
-                               "router":  {
-
-                                          },
-                               "eas":  {
-                                           "projectId":  "1ea09c22-e203-49ee-acf3-36c4a22b1735"
-                                       }
-                           }
-             }
+{
+  "expo": {
+    "name": "Koinonia",
+    "slug": "koinonia",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/new_koinonia_icon.png",
+    "scheme": "koinonia",
+    "userInterfaceStyle": "dark",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.koinonia.app"
+    },
+    "androidStatusBar": {
+      "barStyle": "light-content",
+      "backgroundColor": "#000000",
+      "translucent": false
+    },
+    "android": {
+      "package": "com.koinonia.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#000000",
+        "foregroundImage": "./assets/images/new_koinonia_icon.png",
+        "monochromeImage": "./assets/images/new_koinonia_icon.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "output": "static",
+      "favicon": "./assets/images/new_koinonia_icon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-notifications",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/KOINONIA_image.jpg",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#000000",
+          "dark": {
+            "backgroundColor": "#000000"
+          }
+        }
+      ],
+      "expo-secure-store",
+      "expo-web-browser",
+      "expo-font"
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "1ea09c22-e203-49ee-acf3-36c4a22b1735"
+      }
+    }
+  }
 }
